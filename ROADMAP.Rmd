@@ -1,0 +1,21 @@
+# Roadmap 
+
+## First phase
+
+
+
+### Crowdsourcing and planning
+
+#### Workflow Review
+
+I am interested in making the package work for as wide a demographic as possible which may therefore require expanding functionality. So I would at a first stage crowdsource ideas and develop a final plan on package development.
+
+#### Code Review
+
+
+Most of the functionality of the proposed package has already been developed and there is a repository of my **`r`** code that could be scavenged as a starting point. I envisage a code review element to the initial stage and welcome feedback on how the code could be improved.
+
+
+***
+
+## Global Sprint
