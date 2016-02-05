@@ -1,11 +1,26 @@
 # rmacroRDM
 <br>
 
-###Tools to handle trait macroecological datasets in R
+### Tools to handle trait macroecological datasets in R
 
 
-Trait databases are all the rage these days, for good reason. Traits are interesting from evolutionary and ecological perspectives.
+Trait databases are all the rage these days, for good reason. Traits are interesting from evolutionary and ecological perspectives. While much progress is being made in compiling and making centralised datasets programmatically accessible, often macroecologists at the level of individual researcher or lab, still spent a lot of time manually compiling datasets scrapped from pds, literature searched and entered into excel spreadsheets.
 
+As the size and diversity of datasets increases, so does the requirement for data management to ensure good tracking of data provencance and specification of data key. Efforts to standardise by promoting metadata standards. eg in ecology a number eg EML and availability in R there.
+
+So the responsibility however lies on researchers. ANd this is one of the weakest link.
+
+<br>
+
+***
+
+## **`rmacroRDM`: macroecological data management package in R**
+
+Both the last two projects I have been working on involved compiling datasets into large master trait dataset. The basic premise has been pretty consistent. Here's a master data sheet, here's bunch more data in various formats and with varied reference information. Here's some more open sources of data Put it all together and prepare it for for analysis. So I've ended up with quite a bit of functional code and a somewhat developed framework to see how a better developed package could really provide useful functionality.
+
+Help with data management. In so doing impose data management.
+
+The idea is to mantain a master database to which new datasets are added. It helps with data and metadata management making it easier to add to, subset, query, visualise analyse and share
 
 
 ### **Proposed functionality:**
