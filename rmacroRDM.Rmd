@@ -1,0 +1,129 @@
+# **rmacroRDM**
+
+***
+
+## **Background**
+
+OpenDEFRA 
+
+## **A need for RDM in macroecolgy at the researcher and lab level**
+
+More and more data is becoming available. Indeed as ...said. The biggest issue is data compatibility. Metadata. THe general direction as discussed by [Morgan Ernst](http://jabberwocky.weecology.org/2015/11/23/trait-databases-what-is-the-end-goal/) and [**Tom Webb's blog post**](http://www.scilogs.com/mola_mola/trait-databases-the-desirable-and-the-possible/) appears to be the compilation of datasets. Indeed repositories with automaticic retrieval such as teh [**ecoretriever**](http://www.ecodataretriever.org/) and the [**rNBN**](http://www.nbn.org.uk/News/Latest-news/rNBN-is-an-R-package-for-retrieving-data-from-the.aspx) and other packages.
+
+Nevertheless much of a macroecologists job is still spent compiling datasets scrapped from pds, literature searched and entered into excel spreadsheets
+
+Overall this putting extra requiremnet on computational and data management skills. Provencance and specification of data key. Efforts to standardise by promoting metadata standards. eg in ecology a number eg EML and availability in R there.
+
+So the responsibility however lies on researchers. ANd this is one of the weakest link.
+
+<br>
+
+***
+
+## **`rmacroRDM`: macroecological data management package in R**
+
+Both the last two projects I have been working on involved compiling datasets into large master trait dataset. The basic premise has been pretty consistent. Here's a master data sheet, here's bunch more data in various formats and with varied reference information. Here's some more open sources of data Put it all together and prepare it for for analysis. So I've ended up with quite a bit of functional code and a somewhat developed framework to see how a better developed package could really provide useful functionality.
+
+Help with data management. In so doing impose data management.
+
+The idea is to mantain a master database to which new datasets are added. It helps with data and metadata management making it easier to add to, subset, query, visualise analyse and share
+
+***
+
+### **functionality:**
+
+#### Matching and tracking taxonomy metadata
+
+
+- integrate **`taxize`**
+  - auto correct species names input errors with fuzzy matching
+  - 
+- network of synonyms
+
+
+#### Matching and tracking observation metadata
+
+- QC
+- observer details
+- synonym version control
+- network of citations to track duplication though reuse of data
+
+#### Matching and tracking variable metadata
+
+- enforce complete metadata to add variables. Check consistency of units before adding data.
+- metadata readily available for plotting and extraction for publication.
+
+
+#### Basic Quality control functionality
+- some simple tools to help identify errors, outliers etc
+
+#### Produce analytical datasets
+
+Package to include functions that allow users to:
+
+- interrogate database, extract some information on data avalaibility (partcularly complete cases resulting from different combination of variables).
+- Allow to specify taxonomic and variable subsets
+- Produce **wide analytical dataset**. Contain a selection of functions to summarise duplicate datapoints according to data type. 
+    - output to include variable subset metadata
+    - a list of all references used to create analytical dataset.
+
+
+This could  be further extended to further  exploring potential biases.
+        - taxonomic biases (ie calculate taxonomic distinctness of subsets of complete case species for different variable combinations)
+        - data gap biases  
+        - basic covariance structure between variables. Could be used to relate to data gaps to understand how missing values might
+ 
+
+<br>
+
+***
+
+## **package details**
+
+### **data format**
+
+#### Structure it like a mini database. Structure would consist of:
+
+<br>
+
+- **long data point table:** each row a data point. columns consist of data point metadata, eg.:
+
+    + species 
+    + variable
+    + value
+    + taxonomic matching info
+    + original reference
+    + observer: if manually mined form literature. Could also describe scrapping procedure
+    + quality control (ie confidence in observation)
+    + n: if value derived from multiple measurements, number of observations
+    + dataset code
+    + etc
+    
+- **master species list:**: species list to which all data are to be matched
+
+
+- **taxonomic table:**: taxonomic data for each species used in
+
+    + perhaps even a tree?
+    
+- **variable metadata table:** each row a variable: columns:
+
+    + code: variable short code to use throughout database 
+    + type: eg. continuous, integer, nominal, categorical, binary, proportion etc
+    + var category: eg. ecological, morphological, life history, reproductive etc.
+    + descr: longer description for plotting
+    + units
+    + scores: used for factor/categorical/binary variables in data
+    + levels: if variable is factor/categorical/binary
+    + method code
+    
+- **cross-dataset variable name table:** each row a variable in the master: 
+    - columns are the names of corresponding variables across different datasets
+    
+- **method table:** each row a method referenced in variable metadata:
+    
+    + method code
+    + method description etc
+    
+    
+    
