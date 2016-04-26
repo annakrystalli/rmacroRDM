@@ -1,0 +1,50 @@
+---
+title: "rmacroRDM"
+author: 
+date: 
+output: html_document
+---
+
+Follow these instructions to set up the
+
+Many of the functions in the rmacroRDM package are set up to allow for automatic loading and processing of data from appropriately named folders. This allows quick and consistent processing of data. However it does depend on data and metadata being correctly labelled and saved in the appropriate folders. This tutorial will guide you through correct setup and walk through an example of adding a dataset to a master macro dataset.
+
+## **Setup**
+
+The first thing to do is to specify the input, output and script folders, set up the data input folder and populate it with the appropriately named data in the appropriate folders.
+
+### settings
+
+First set the location of the **input/**, **output/** and **script/** folders. Make sure the [**`functions.R`**]() and [**`wideData_function.R`**]() scripts are saved in the **scripts/** folder and `source`
+
+```{r, warning=F, message=FALSE}
+
+### SETTINGS ##############################################################
+
+options(stringsAsFactors = F)
+
+output.folder <- "~/Documents/workflows/rmacroRDM/data/output"
+input.folder <- "~/Documents/workflows/rmacroRDM/data/input"
+script.folder <- "~/Documents/workflows/rmacroRDM/"
+
+# Functions & Packages
+
+require(dplyr)
+
+# source rmacroRDM functions
+source(paste(script.folder, "functions.R", sep = ""))
+
+
+
+```
+
+```{r, echo=F, warning=F, message=F}
+
+require(knitr)
+```
+
+### **Setup input folder**
+
+
+
+Once initial settings have been made
