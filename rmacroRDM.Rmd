@@ -10,7 +10,7 @@ OpenDEFRA
 
 More and more data is becoming available. Indeed as ...said. The biggest issue is data compatibility. Metadata. THe general direction as discussed by [Morgan Ernst](http://jabberwocky.weecology.org/2015/11/23/trait-databases-what-is-the-end-goal/) and [**Tom Webb's blog post**](http://www.scilogs.com/mola_mola/trait-databases-the-desirable-and-the-possible/) appears to be the compilation of datasets. Indeed repositories with automaticic retrieval such as teh [**ecoretriever**](http://www.ecodataretriever.org/) and the [**rNBN**](http://www.nbn.org.uk/News/Latest-news/rNBN-is-an-R-package-for-retrieving-data-from-the.aspx) and other packages.
 
-Nevertheless much of a macroecologists job is still spent compiling datasets scrapped from pds, literature searched and entered into excel spreadsheets
+Nevertheless much of a macroecologists job is still spent compiling datasets scrapped from pds, literature searched and entered into excel spreadsheets.
 
 Overall this putting extra requiremnet on computational and data management skills. Provencance and specification of data key. Efforts to standardise by promoting metadata standards. eg in ecology a number eg EML and availability in R there.
 
@@ -71,7 +71,7 @@ Package to include functions that allow users to:
 This could  be further extended to further  exploring potential biases.
         - taxonomic biases (ie calculate taxonomic distinctness of subsets of complete case species for different variable combinations)
         - data gap biases  
-        - basic covariance structure between variables. Could be used to relate to data gaps to understand how missing values might
+        - basic covariance structure between variables. Could be used to relate to data gaps to understand how missing values might affect results.
  
 
 <br>
