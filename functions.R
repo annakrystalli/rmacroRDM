@@ -3,7 +3,8 @@
 #' 
 #' Sets up input folder with correct folder structure
 #' @param input.folder file path to input data folder.
-#' @param meta.vars vector containing names of meta.vars
+#' @param meta.vars vector containing names of meta.vars. Defaults to c("qc", "observer", "ref", "n", 
+#' "notes")
 #' @keywords meta
 #' @details Creates required folders in the data input folder for automated retrieval and processing 
 #' of data. "raw" is a folder to stored raw data in. Clean data ready to compile should be stored in
@@ -15,7 +16,13 @@
 #' @examples
 #' setupInputFolder()
 
-setupInputFolder <- function(input.folder, meta.vars){
+setupInputFolder <- function(input.folder, meta.vars = c("qc", "observer", "ref", "n", "notes")){
+  
+  if(!file.exists(input.folder)){stop("invalid input.folder path")}
+  
+  if(substr(input.folder, nchar(input.folder), nchar(input.folder)) != "/"){
+    input.folder <- paste(input.folder, "/", sep = "")
+  }
   
   lapply(c("raw", "csv", "metadata", "r data", "taxo", meta.vars),
          FUN = function(x){dir.create(paste(input.folder, x, sep =""), 
@@ -216,7 +223,7 @@ compileMeta <- function(m, input.folder = NULL, fileEncoding = NULL){
             
             # if group look up table does not exist, create csv in which individual data variables can be assigned 
             # to meta group names. If data variable has no metadata, leave as NA in group .
-            metav.grp <- data.frame(var = check.vars, metav.grp = "")
+            metav.grp <- data.frame(var = check.vars, grp = "")
             metav.grp$metav.grp[metav.grp$var %in% names(metav.dd)] <- metav.grp$var[metav.grp$var %in% names(metav.dd)]
             write.csv(metav.grp, paste(paste(input.folder, meta.var, "/", sep =""), 
                                           gsub(".csv", "", m$filename), "_", meta.var, "_group.csv", 
@@ -558,22 +565,6 @@ ITISlookUpData <- function(version=NULL){
   if(version == 2){names(itis.match) <- c("synonyms", "species")}
   
   return(itis.match)}
-
-# Outputs details of master species name match lookup
-matchMetrics <- function(data, master, match.lengths){
-  n <- min(nrow(master), nrow(data))
-  print(paste("total data set:", length(data$species)))
-  print(paste("total matched:", n - match.lengths["unmatched"]))            
-  print(paste("total unmatched:", match.lengths["unmatched"]))                       
-  print(paste("total ITIS matches:", 
-              match.lengths["unmatched"] - match.lengths["unmatched1"]))
-  print(paste("total Birdlife:", 
-              match.lengths["unmatched1"] - match.lengths["unmatched2"]))
-  print(paste("total master.match:", 
-              match.lengths["unmatched2"] - match.lengths["unmatched3"]))
-  print(paste("manual matches:", match.lengths["unmatched3"]))}
-
-
 
 
 #Look up unmantched vector of species. If vector contains unmatched data species, 
