@@ -345,17 +345,13 @@ addMeta <- function(meta, add){
 #' data (excluding species) are checked against the variable names in the first column of the
 #' metadata .csv saved in the metadata folder.
 #' @param m match object
-#' @param input.folder path to master data input folder
+#' @param metadata variable metadata data.frame
 #' @keywords meta
 #' @return if metadata complete, returns m. if not, produces error.
 #' @export
 #' @examples
 #' checkVarMeta()
-checkVarMeta <- function(m, input.folder){
-  
-  # check metadata complete
-  metadata <- read.csv(paste(input.folder, "metadata/metadata.csv", sep = ""),  
-                       stringsAsFactors=FALSE)
+checkVarMeta <- function(m, metadata){
   
   if(!all(names(m$data) %in% c(metadata$code, "species"))){
     print(names(m$data)[!(names(m$data) %in% c(metadata$code, "species"))])
@@ -591,9 +587,9 @@ dataMatchPrep <- function(m){
 
 
 # Create match object
-matchObj <- function(data.ID, spp.list, data = dl[[data.ID]], status = "unmatched", 
+matchObj <- function(data.ID, spp.list, data, status = "unmatched", 
                      sub = data.match.params$sub[data.match.params$data.ID == data.ID],
-                     meta = meta, filename = NULL){
+                     meta = meta, filename = NULL, unmatched = NULL){
   
   
   if(sub == "spp.list"){
