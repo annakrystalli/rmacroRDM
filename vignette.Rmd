@@ -2,7 +2,7 @@
 title: "rmacroRDM"
 author: 
 date: 
-output: html_document
+output: md_document
 ---
 
 The rmacroRDM package contains functions to help with the compilation of macroecological datasets. It compiles datasets into a **master long database of individual observations**, matched to a specified **master species list**. It also *checks, separates and stores taxonomic and metadata information* on the *observations*, *variables* and *datasets* contained in the data. It therefore aims to ensure full traceability of datapoints and as robust quality control, all the way through to the extracted analytical datasets. 
@@ -30,7 +30,7 @@ options(stringsAsFactors = F)
 
 output.folder <- "~/Documents/workflows/rmacroRDM/data/output/"
 input.folder <- "~/Documents/workflows/rmacroRDM/data/input/"
-script.folder <- "~/Documents/workflows/rmacroRDM/"
+script.folder <- "~/Documents/workflows/rmacroRDM/R/"
 
 # Functions & Packages
 
@@ -352,7 +352,7 @@ In this example we will demonstrate the use of ***rmacroRDM functions*** to merg
 
 We will use `D0` to set up the `master` and then merge dataset `D1` to it.
 
-First set the location of the **input/**, **output/** and **script/** folders. Make sure the [**`functions.R`**](https://github.com/annakrystalli/rmacroRDM/blob/master/functions.R) and [**`wideData_function.R`**](https://github.com/annakrystalli/rmacroRDM/blob/master/wideData_function.R) scripts are saved in the **scripts/** folder and `source`.
+First set the location of the **input/**, **output/** and **script/** folders. Make sure the [**`functions.R`**](https://github.com/annakrystalli/rmacroRDM/blob/master/R/functions.R) and [**`wideData_function.R`**](https://github.com/annakrystalli/rmacroRDM/blob/master/R/wideData_function.R) scripts are saved in the **scripts/** folder and `source`.
 
 
 ```{r, warning=F, message=FALSE}
