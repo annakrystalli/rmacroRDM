@@ -8,9 +8,9 @@
 
 Trait databases are all the rage these days, for good reason. Traits are interesting from evolutionary and ecological perspectives. While much progress is being made in compiling and making centralised datasets programmatically accessible, often macroecologists at the level of individual researcher or lab, still spent a lot of time manually compiling datasets scrapped from pds, literature searched and entered into excel spreadsheets.
 
-As the size and diversity of datasets increases, so does the requirement for data management to ensure good tracking of data provencance and specification of data key. Efforts to standardise by promoting metadata standards. eg in ecology a number eg EML and availability in R there.
+As the size and diversity of datasets increases, so does the requirement for data management to ensure good tracking of data provencance and specification of data key. Efforts to standardise by promoting metadata standards. eg in ecology a number eg EML and availability in R there. 
 
-So the responsibility however lies on researchers. ANd this is one of the weakest link.
+So the responsibility however lies on researchers which often lack the time, skill, resources or tools needed to achieve good data management practices. 
 
 <br>
 
@@ -20,12 +20,15 @@ So the responsibility however lies on researchers. ANd this is one of the weakes
 
 Both the last two projects I have been working on involved compiling datasets into large master trait dataset. The basic premise has been pretty consistent. Here's a master data sheet, here's bunch more data in various formats and with varied reference information. Here's some more open sources of data Put it all together and prepare it for for analysis. So I've ended up with quite a bit of functional code and a somewhat developed framework to see how a better developed package could really provide useful functionality.
 
-Help with data management. In so doing impose data management.
+I'm hoping to compile the code into a package to facilitate data management and standardisation of macroecological trait datasets. Good data and metadata management making it easier to add to, subset, query, visualise analyse and share.
 
-The idea is to mantain a master database to which new datasets are added. It helps with data and metadata management making it easier to add to, subset, query, visualise analyse and share
 
 
 ### **Proposed functionality:**
+ 
+#### see [**vignette**](https://github.com/annakrystalli/rmacroRDM/blob/master/vignette.md) for a demo of current functionality
+
+<br>
 
 #### Matching and tracking taxonomy metadata
 
@@ -77,7 +80,10 @@ This could  be further extended to further  exploring potential biases.
 
 ### **data format**
 
-#### Structure it like a mini database. Structure would consist of:
+#### Structure it like a mini database. 
+The idea is to mantain a master database to which new datasets are added.
+
+#### Structure would consist of:
 
 <br>
 
@@ -119,6 +125,8 @@ This could  be further extended to further  exploring potential biases.
     
     + method code
     + method description etc
+    
+    
     
     
     
