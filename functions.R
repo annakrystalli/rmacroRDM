@@ -29,6 +29,30 @@ setupInputFolder <- function(input.folder, meta.vars = c("qc", "observer", "ref"
                                       showWarnings = F)})
 }
 
+
+
+
+createSpp.list <- function(species, taxo.dat, taxo.vars){
+  
+  if(is.null(taxo.vars)){
+    spp.list <- data.frame(species = species, master.spp = T, rel.spp = NA, 
+                                   taxo.status = "original")
+    return(spp.list)}
+  
+  if(any(!species %in% taxo.dat$species)){
+    print(species[!species %in% taxo.dat$species])
+    stop("species data missing in taxo.dat")}
+  
+  if(any(!taxo.vars %in% names(taxo.dat))){print(taxo.vars[!taxo.vars %in% names(taxo.dat)])
+    stop("taxo.vars data missing in taxo.dat")}
+  
+  taxo.dat <- taxo.dat[taxo.dat$species == species, taxo.vars]
+  
+  spp.list <- data.frame(species = species, master.spp = T, rel.spp = NA, 
+                         taxo.status = "original", taxo.dat)
+}
+
+
 #' Create metadata list
 #' 
 #' Creates a named metadata list of the appropriate length to match supplied vector of meta.vars
@@ -403,34 +427,80 @@ spp2taxoMatch <- function(spp, parent.spp, taxo.table){
 
 # Compiles dataset into format compatible with appending to master database. Takes 
 # match object m.
-masterDataFormat <-  function(m, input.folder, output.folder){
+masterDataFormat <-  function(m, meta.vars, match.vars, var.vars){
+  
+  master.vars <- c("species", match.vars, var.vars, meta.vars)
     
   data <- m$data
   
   #make vector of data variables to be added
-  match.vars <- names(data)[!names(data) %in% c("species", "synonyms", "data.status")]
-  match.dat <- data.frame(data[, match.vars])
-  names(match.dat) <- match.vars
+  data.vars <- names(data)[!names(data) %in% c("species", match.vars)]
+  data.dat <- data.frame(data[, data.vars])
+  names(data.dat) <- data.vars
   
   #find non NA values in match data. Match arr.indices to spp and variable names (for QA)
-  id <- which(!is.na(match.dat), arr.ind = T)
-  spp <- as.character(data[,"species"][id[, "row"]])
-  var <- as.character(match.vars[id[, "col"]])
+  id <- which(!is.na(data.dat), arr.ind = T)
+  species <- as.character(data[,"species"][id[, "row"]])
+  var <- as.character(data.vars[id[, "col"]])
+  data.ID <- m$data.ID
+  value <- data.dat[id]
   
-  mdat <- try(cbind(species = spp,
-                    var = var, 
-                    value = match.dat[id], data = m$data.ID,
-                    synonyms = data[id[,"row"], "synonyms"], 
-                    data.status = data[id[,"row"], "data.status"],
-                    qc = getMeta("qc", meta = m$meta, spp = spp, var = var),
-                    observer = getMeta("observer", meta = m$meta, spp = spp, var = var),
-                    ref = getMeta("ref", meta = m$meta, spp = spp, var = var),
-                    n = getMeta("n", meta = m$meta, spp = spp, var = var)))
+  
+  mdat <- data.frame(matrix(NA, ncol = length(master.vars), nrow = length(species)))
+  names(mdat) <- master.vars
+  
+  for(var.var in c("species", var.vars)){
     
-    return(list(mdat = mdat, spp.list = m$spp.list))
+    mdat[,var.var] <- get(var.var)}
+  
+  
+  for(match.var in match.vars){
+    
+    mdat[,match.var] <- data[id[,"row"], match.var]}
+  
+  for(meta.var in meta.vars){
+    
+    mdat[,meta.var] <- getMeta(meta.var, meta = m$meta, spp = species, var = var)}
+                    
+    
+    return(list(data = mdat, spp.list = m$spp.list))
 }
 
 
+updateMaster <- function(master, data, spp.list = NULL){
+  
+  if(is.null(spp.list)){
+    if(is.null(master$spp.list)){
+      stop("no spp.list supplied")}else{spp.list <- master$spp.list}}
+  
+  if(!all(data$species %in% spp.list$species)){
+    
+    print(data$species[!data$species %in% spp.list$species])
+      stop("data and spp.list species name mismatch")}
+    
+  if(!all(unique(data$var) %in% master$metadata$code)){
+    print(unique(data$var)[!unique(data$var) %in% master$metadata$code])
+    stop("missing variable metadata for data vars")
+  }
+  
+
+  if(all(names(master$data) == names(data))){
+  master$data <- rbind(master$data, data)
+  master$spp.list <- spp.list
+  return(master)}else{
+    stop("update data format error. column name mismatch")
+  }
+  
+}
+  
+newMasterData <- function(master.vars){
+  data <- data.frame(matrix(vector(), 0, length(master.vars),
+                      dimnames = list(c(), master.vars)))
+  return(data)
+}
+  
+  
+  
 # look up unmatched species in table (lookup.dat) of known match pairs. 
 # If list is of unmatched data species (ie dataset species is a subset of spp.list), 
 # match to known synonyms. If list is of unmatched spp.list species (ie spp.list a subset of 
@@ -463,7 +533,14 @@ sppMatch <- function(m, unmatched = unmatched, syn.links, addSpp = T){
           match <- data.frame(species = syns[synsNotInSub][1], synonyms = spp)}else{
             match <- NULL
             if(addSpp){
-              spp.list <- rbind(spp.list, data.frame(species = spp, master.spp = F, rel.spp = syns[1]))}
+              taxo.vars <- names(spp.list)[!names(spp.list) %in% c("species",
+                                                                   "rel.spp",
+                                                                   "master.spp", 
+                                                                   "taxo.status")]
+              
+              spp.list <- rbind(spp.list, data.frame(species = spp, master.spp = F, 
+                                                     rel.spp = syns[1], taxo.status = "copied", 
+                                                     spp.list[syns[1], taxo.vars]))}
           }
         
       }
@@ -521,18 +598,11 @@ dataSppMatch <- function(m, ignore.unmatched = ignore.unmatched, syn.links = syn
     print(paste("match incomplete,",length(unmatched), sub, "datapoints unmatched"))
     m$status <- paste("incomplete_match:", length(unmatched)) 
     
-    if(!ignore.unmatched){
+    m$unmatched <- data.frame(species = unmatched, synonyms = NA)
     
-      # if all match pair datasets checked and species remain unmatched write manual match spp list
-      dir.create(paste(input.folder, "r data/", sep = ""), showWarnings = F)
-      dir.create(paste(input.folder, "r data/match data/", sep = ""), showWarnings = F)
-      
-      write.csv(data.frame(synonyms = if(sub == "spp.list"){""}else{unmatched},
-                           species = if(sub == "spp.list"){unmatched}else{""}),
-                paste("r data/match data/",m$data.ID," mmatch.csv", sep = ""),
-                row.names = F)
-      print(paste("unmatched species list saved in file 'Data.IDmmatch.csv'"))
-      stop("manually match and save as 'Data.IDmmatched.csv' to continue")}
+    if(!ignore.unmatched){
+      print(m$unmatched)
+      stop("manually match unmatched to continue")}
   }
   
   if(save.m){
@@ -588,8 +658,7 @@ dataMatchPrep <- function(m){
 
 # Create match object
 matchObj <- function(data.ID, spp.list, data, status = "unmatched", 
-                     sub = data.match.params$sub[data.match.params$data.ID == data.ID],
-                     meta = meta, filename = NULL, unmatched = NULL){
+                     sub, meta = meta, filename = NULL, unmatched = NULL){
   
   
   if(sub == "spp.list"){
