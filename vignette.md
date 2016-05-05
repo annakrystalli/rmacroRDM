@@ -454,7 +454,7 @@ appropriately named data in the appropriate folders.
 
     output.folder <- "~/Documents/workflows/rmacroRDM/data/output/"
     input.folder <- "~/Documents/workflows/rmacroRDM/data/input/"
-    script.folder <- "~/Documents/workflows/rmacroRDM/"
+    script.folder <- "~/Documents/workflows/rmacroRDM/R/"
 
 ### **setup `input.folder`**
 
@@ -788,9 +788,9 @@ it.
 
 First set the location of the **input/**, **output/** and **script/**
 folders. Make sure the
-[**`functions.R`**](https://github.com/annakrystalli/rmacroRDM/blob/master/functions.R)
+[**`functions.R`**](https://github.com/annakrystalli/rmacroRDM/blob/master/R/functions.R)
 and
-[**`wideData_function.R`**](https://github.com/annakrystalli/rmacroRDM/blob/master/wideData_function.R)
+[**`wideData_function.R`**](https://github.com/annakrystalli/rmacroRDM/blob/master/R/wideData_function.R)
 scripts are saved in the **scripts/** folder and `source`.
 
     ### SETTINGS ##############################################################
@@ -799,7 +799,7 @@ scripts are saved in the **scripts/** folder and `source`.
 
     output.folder <- "~/Documents/workflows/rmacroRDM/data/output/"
     input.folder <- "~/Documents/workflows/rmacroRDM/data/input/"
-    script.folder <- "~/Documents/workflows/rmacroRDM/"
+    script.folder <- "~/Documents/workflows/rmacroRDM/R/"
 
     # Functions & Packages
 
