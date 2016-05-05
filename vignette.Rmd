@@ -5,17 +5,209 @@ date:
 output: html_document
 ---
 
-Follow these instructions to set up the
+The rmacroRDM package contains functions to help with the compilation of macroecological datasets. It compiles datasets into a **master long database of individual observations**, matched to a specified **master species list**. It also *checks, separates and stores taxonomic and metadata information* on the *observations*, *variables* and *datasets* contained in the data. It therefore aims to ensure full traceability of datapoints and as robust quality control, all the way through to the extracted analytical datasets. 
+
+The idea is to enforce a basic level of data management and quality control and bundling it with important metadata for both each stage in data processing and compilation and **`[[master]]` outputs**. Managing data in such a way makes validating, understanding, analysing, visualising and communicating much easier. 
+
+Standardisation allows data to be shared and build upon more easily and with higher robustness. It also allows more interactivity as apps can be built around **rmacroRDM data outputs** to facilitate data exploration, validation, access and reporting.  It also allows data to be shared and build upon more easily and with higher robustness.
+
+
+
+### **rmacroRDM `[master]` dataset**
+
+The overall purpose of the functions in the package are to compile macroecological trait datasets into **a master database of observations (T1)**. This allows information to be stored with individual datapoints, allowing for better quality control and traceability. 
+
+Metadata information on individual data points stored in the **long `master` dataset** is defined by assigning ***observation metavariables `{meta.vars}`***. Information on the taxonomic matching of datapoints through synonyms is also stored and is defined through **match variables `{match.vars}`**. In the example below, "*species*", *var*", "*value*" identify each oservation, "*data.status*" "*qc*","*observer*", "*ref*" and "*n*" are the default **`meta.vars`** and "*synonyms*" and "*data.status*"  are the default **`match.var`**.
+
+
+
+```{r, warning=F, message=FALSE, echo=FALSE}
+
+
+### SETTINGS ##############################################################
+
+options(stringsAsFactors = F)
+
+output.folder <- "~/Documents/workflows/rmacroRDM/data/output/"
+input.folder <- "~/Documents/workflows/rmacroRDM/data/input/"
+script.folder <- "~/Documents/workflows/rmacroRDM/"
+
+# Functions & Packages
+
+require(knitr)
+require(dplyr)
+
+# source rmacroRDM functions
+source(paste(script.folder, "functions.R", sep = ""))
+source(paste(script.folder, "wideData_function.R", sep = ""))
+
+# FILES
+D1 <- read.csv(paste(input.folder, "csv/D1.csv", sep = ""), fileEncoding = "mac")
+metadata <- read.csv(paste(input.folder, "metadata/metadata.csv", sep = ""), fileEncoding = "mac") %>% apply(2, FUN = trimws) %>% data.frame(stringsAsFactors = F)
+
+
+synonyms  <- read.csv(paste(input.folder,"taxo/synonyms.csv", sep = ""), stringsAsFactors=FALSE)
+syn.links <- synonyms[!duplicated(t(apply(synonyms[,1:2], 1, sort))),1:2]
+
+master <- read.csv(paste(output.folder, "master.csv", sep = ""), fileEncoding = "mac")[1:8,]
+master$ref <- paste(substr(master$ref, 1, 10), "...")
+
+meta.vars = c("qc", "observer", "ref", "n", "notes")
+taxo.var <- c("species", "order","family")
+var.vars <- c("var", "value", "data")
+var.omit <- c("no_sex_maturity_d", "adult_svl_cm", "male_maturity_d")
+match.vars <- c("synonyms", "data.status")
+
+master.vars <- c("species", match.vars, var.vars, meta.vars)
+
+
+kable(master,caption = "T1: example master data sheet")
+
+
+```
+
+This framework also can handle multiple intraspecific datapoints for individual `{vars}` allowing users to build up information of trait intraspecific variation across observations. Observation metadata enables quality control to filter data supplied to analytical datasets.
+
+***
+<br>
+
+## match objects {`m`}
+
+Functions in the rmacroRDM package have been designed to receive and update a match object (**`m`**). This helps keep all the information relating to the matching of a particular dataset together, updatwed at the same time and available and updated at each stage.
+
+Match objects `[[m]]` are defined by the function **`matchObj()`** 
+
+```{r, eval=FALSE}
+
+ m <- matchObj(data.ID, spp.list, data, status = "unmatched", 
+               sub = "data", meta, filename)
+  
+```
+
+and have the following elements:
+
+```{r, warning=F, message=FALSE, echo=FALSE}
+
+load(paste(output.folder, "D1m.RData", sep = ""))
+
+m$unmatched <- NULL
+
+names(m)
+
+```
+
+***
+
+### **`[[m]]` structure**
+
+
+
+#### **`"data.ID"`**
+
+a character vector of the dataset code *(eg. `"D1"`)*
+
+#### **`[spp.list]`**
+
+dataframe containing the master species list to which all datasets are to be matched. It also tracts any additions (if allowed) during the matching process.
+
+#### **`[data]`**
+
+dataframe containing the dataset to be added
+
+#### **`"sub"`**
+
+character string, either `"spp.list"` or `"data"`. Specifies which `[[m]]` element contains the smaller set of species. Unmatched species in the subset are attempted to be matched through synonyms to `[[m]]` element datapoints in the larger species set. 
+
+#### `"set"`
+
+character string, either `"spp.list"` or `"data"`. Specifies which `[[m]]` element contains the larger set of species. Automatically determined from `m$sub`.
+
+#### `"status"`
+
+character string. Records status of `[[m]]` within the match process. varies between `{"unmatched", "full_match", "incomplete_match: (n unmatched)"}`
+
+#### **`[[meta]]`**
+
+list, length of `{meta.vars}` containing  observation metadata for each `"meta.var"`. `meta$meta.var` can be a `[dataframe]` or `"character_string"`. The default `meta.vars` represent observation metadata  commonly associated with macroecological datasets. `NULL` elements are added as NA
+
+ - `"ref"`: the reference from which observation has been sourced. This is the only `meta.var` that *MUST* be correctly supplied for matching to proceed.
+ - `"qc"`: any quality control information regarding individual datapoints. Ideally, a consistent scoring system used across compiled datasets.
+ - `"observer"`: The name of the observer of data points. Used to allow assessment of observer bias, particularly in the case of data sourced manually form literature.
+ - `"n"`: if value is based on a summary of multiple observations, the number of original observations value is based on.
+ - `"notes"`: any notes associated with individual observations.
+
+#### **`"filename"`**
+character string, name of the dataset filename. Using the filename consistently throughout the file system enables automating sourcing of data.
+
+#### **`"unmatched"`**
+stored details of unmatched species if species matching incomplete.
+
+***
+
+<br>
+
+## additional `[metadata]`
+
+### - variable `[metadata]`
+
+Metadata on `{vars}` are stored on a separate sheet. Completeness of the metadata sheet is not only checked for but it also required for many of the functions. It's also extremely useful downstream, at data analysis and presentation stages.
+
+**`[metadata]`** contains information on coded variables. Typical information includes:
+
+- **`desc`**: a longer description of vars, 
+- **`cat`**: var category
+- **`units`**
+- **`type`**:
+
+    - `"bin"`: binary
+    - `"cat"`: categorical
+    - `"con"`: continuous
+    - `"int"`: integer
+
+- **`scores`** & **`levels`** if the variable is categorical `"cat"` or binary `"bin"`.
+- **`notes`** any textual information supplied with the data.
+- **`log`** `T` or `F`. Often useful to be able to assign whether a variable should be logged for exploration and analysis.
+
+```{r, warning=F, message=FALSE, echo=FALSE}
+
+md <- metadata[c(2, 4:10),-c(2, 5, 4, 11, 13)]
+kable(md,caption = "T2: example variable metadata sheet")
+
+```
+
+### - [syn.links] 
+
+Another important aspect of matching macroecological variables is using know synonym links across taxonomies to match species names across datasets. Synonyms are su two data column containing unique pairs of synonyms.
+
+In my example, I provide `[syn.links]` which **contains unique synonym links I have compiled** throughout the projects I've worked on and **only pertains to birds**. 
+
+This is by no means complete and often, some manual matching (eg through [avibase]() is required. The hope is to integrate rmacroRDM with a package like [`taxise`](), linking the process to official repositories, automating as much as possible and enabling better tracking of the network of synonyms through taxonomies used to match species across datasets. [**ISSUE**]()
+
+
+
+
+```{r, warning=F, message=FALSE, echo=FALSE}
+ 
+print(head(syn.links, 8))
+
+```
+
+***
+
+<br>
+
+# {file.system} management
 
 Many of the functions in the rmacroRDM package are set up to allow for automatic loading and processing of data from appropriately named folders. This allows quick and consistent processing of data. However it does depend on data and metadata being correctly labelled and saved in the appropriate folders. This tutorial will guide you through correct setup and walk through an example of adding a dataset to a master macro dataset.
 
-## **Setup**
+<br>
+
+## **setup**
 
 The first thing to do is to specify the input, output and script folders, set up the data input folder and populate it with the appropriately named data in the appropriate folders.
 
 ### settings
 
-First set the location of the **input/**, **output/** and **script/** folders. Make sure the [**`functions.R`**]() and [**`wideData_function.R`**]() scripts are saved in the **scripts/** folder and `source`
 
 ```{r, warning=F, message=FALSE}
 
@@ -23,28 +215,470 @@ First set the location of the **input/**, **output/** and **script/** folders. M
 
 options(stringsAsFactors = F)
 
-output.folder <- "~/Documents/workflows/rmacroRDM/data/output"
-input.folder <- "~/Documents/workflows/rmacroRDM/data/input"
+output.folder <- "~/Documents/workflows/rmacroRDM/data/output/"
+input.folder <- "~/Documents/workflows/rmacroRDM/data/input/"
+script.folder <- "~/Documents/workflows/rmacroRDM/"
+
+```
+
+
+### **setup `input.folder`**
+
+Once initial settings have been made, you will need to setup the input folder. The easiest way to do this is to use the **`setupInputFolder()`**. This defaults to meta.vars: `"qc"`, `"observer"`, `"ref"`, `"n"`, `"notes"`. The function is however flexible so the meta.vars can be customised to meet users observation metadata needs. The basic folders created by the function are:
+
+
+```{r, warning=F, message=FALSE, eval=FALSE}
+
+# custom meta.variables can be assigned by supplying a vector of character strings to the metadata
+# argument in function setupInputFolder()
+
+meta.vars = c("qc", "observer", "ref", "n", "notes")
+
+setupInputFolder(input.folder, meta.vars)
+
+```
+
+
+
+## **Populate input folders**
+
+<br>
+
+### **data**
+
+- **`raw/`** : a folder to collect all raw data. These files are to be treated as *read only*.
+- **`csv/`** : raw data files should be saved as .csv files in this folder. This is the folder from which most functions will source data to be compiled.
+
+#### **`csv/`**
+
+Because it is the most common form encountered, data in the `csv` folder is usually given in a wide format (ie species rows and variable columns). For traceability, is is good practice to name the `.csv` files as the **original raw data file name** from which they were created. 
+
+- eg. in our example the datasheet being added and saved in folder `csv/` as **`D1.csv`**. Any meta.var data associated with this dataset should also be saved in the appropriate meta.var folder **`D1.csv`**. 
+
+##### Pre-processing
+
+Some pre-processing might be required. In particular, the column containing species data should be labelled **`species`**. In a pre-processing stage, you might need to match **master `code`** and **data** variable names representing the same variable. I recommend this be done in a scripted pre-processing step using a variable lookup table to keep track of raw variable names across data sets. eg
+
+```{r, warning=F, message=FALSE, echo=FALSE}
+
+kable(read.csv(paste(input.folder, "metadata/vnames.csv", sep = ""))[22:30, -2],
+      caption = "Correspondence of D0 & D1 dataset variable names to master variable codes")
+
+```
+
+If there are meta.var data included in the dataset, these should be labelled or appended with the appropriate meta.var suffix, (*eg. `ref` if meta.var* **ref** *relate to all variables or `body.mass_ref` if meta.var* **ref** *variable refers to a particular variable, in this case body mass.*) Correct naming of meta.var columns will allow **`separateMeta()`** to identify and extract meta.var data from the dataset. Also ensure taxonomic variables (*eg. class, order etc*) are removed from data to be added. So datasets should contain a `species` column, any *`variable`* data columns to be added and can additionally contain appropriately appended *`meta.var`* columns.
+
+
+
+<br>
+
+## **{meta.vars}**
+
+### Supplying meta.vars. 
+
+Meta.vars can either be supplied directly to the appropriate functions by attaching to the appropriate element of the **`meta` list object** or, data can be saved in appropriately named folders. Files should be named the same as the data sheet being compiled.
+
+### meta.var data formats
+
+There are a number of formats meta variable data can be supplied in. 
+
+<br>
+
+##### **single value across all species and variables**
+
+If a **single value relates to all data** in the data file (eg all data sourced from a single reference), then meta.var can be supplied as a **single value or character string** (eg a character string of the reference from which the data has been sourced). 
+
+<br>
+
+##### **single value across all variables, but not species**
+
+If a **single value** relates to **all variables** in the data but **varies across species**, metavariable data should be supplied as a two column dataframe with columns named `species` and `all`, eg:
+
+```{r, warning=F, message=FALSE, echo=FALSE}
+
+kable(read.csv(paste(input.folder, "ref/all demo.csv", sep = ""))[1:5,],
+      caption = "Example ref meta.var data where reference is same across variables but varies across species")
+
+```
+
+<br>
+
+##### **Value varies across variables and species**
+
+There are two ways meta.var data that vary across species can be formatted. The simplest is a **species** x **var** dataframe where meta.var columns relating to specific variables are named according to the variables in the data they relate to. If meta.var columns correspond to groups of variable (eg different sources for groups of variables), two dataframes need to be supplied:
+
+- One containing the group meta.var data with column names indicating variable group names eg:
+
+```{r, warning=F, message=FALSE, echo=FALSE}
+
+kable(read.csv(paste(input.folder, "ref/BirdFuncDat.csv", sep = ""))[1:5,],
+      caption = "Example ref meta.var data where reference is same across groups of variables but varies across species")
+
+```
+
+- A separate two column dataframe, with columns named **`var`** and **`grp`** linking individual variables to group meta.var names in the first dataframe, eg:
+```{r, warning=F, message=FALSE, echo=FALSE}
+dd <- read.csv(paste(input.folder, "ref/BirdFuncDat_ref_group.csv", sep = ""))
+kable(dd[c(2:3, 12:13, 22),], caption = "Example ref meta.var data group to variable cross-reference table")
+
+```
+
+Note that variable names for most meta.vars can be assigned `NA` under `grp` in the `_group` data.frame in which case NA will be assigned for that meta.var for each variable observation. However, references MUST be provided for all variables and matching will not proceed until this condition has been met.
+
+
+
+## **`syn.links`**
+
+syn.links needs to be a two column data.frame of unique synonym links
+
+<br> 
+
+##### **metadata/**
+
+ - `[metadata]`: should contain a **"metadata.csv"** file with information on all variables in the master datasheet.
+ - `[vnames]`: table of variable name correspondence across datasets.
+ 
+ <br>
+
+##### **taxo/**
+- `[taxo.table]`: table containing taxonomic information
+
+
+<br>
+
+## **example workflow**
+
+In this example we will demonstrate the use of ***rmacroRDM functions*** to merge datasets **`D0`** and **`D1`** into a **`master`** datasheet. 
+
+We will use `D0` to set up the `master` and then merge dataset `D1` to it.
+
+First set the location of the **input/**, **output/** and **script/** folders. Make sure the [**`functions.R`**](https://github.com/annakrystalli/rmacroRDM/blob/master/functions.R) and [**`wideData_function.R`**](https://github.com/annakrystalli/rmacroRDM/blob/master/wideData_function.R) scripts are saved in the **scripts/** folder and `source`.
+
+
+```{r, warning=F, message=FALSE}
+### SETTINGS ##############################################################
+
+options(stringsAsFactors = F)
+
+output.folder <- "~/Documents/workflows/rmacroRDM/data/output/"
+input.folder <- "~/Documents/workflows/rmacroRDM/data/input/"
 script.folder <- "~/Documents/workflows/rmacroRDM/"
 
 # Functions & Packages
 
 require(dplyr)
 
+
 # source rmacroRDM functions
 source(paste(script.folder, "functions.R", sep = ""))
+source(paste(script.folder, "wideData_function.R", sep = ""))
+```
 
+<br>
+
+Also we set a number of parameters which will configure the master and spp.list setup.
+```{r, warning=F, message=FALSE}
+# master settings
+var.vars <- c("var", "value", "data.ID")
+match.vars <- c("synonyms", "data.status")
+meta.vars = c("qc", "observer", "ref", "n", "notes")
+master.vars <- c("species", match.vars, var.vars, meta.vars)
+
+# spp.list settings
+taxo.vars <- c("genus", "family", "order")
 
 
 ```
 
-```{r, echo=F, warning=F, message=F}
+```{r, warning=F, message=FALSE, eval=FALSE}
 
-require(knitr)
+# custom meta.variables can be assigned by supplying a vector of character strings to the metadata
+# argument in function setupInputFolder()
+
+
+setupInputFolder(input.folder, meta.vars)
+
 ```
 
-### **Setup input folder**
+Once folders are correctly populated, load D0.
+
+```{r, warning=F, message=FALSE}
+D0 <- read.csv(file = paste(input.folder, "csv/D0.csv", sep = "") ,fileEncoding = "mac")
+
+```
+
+```{r, warning=F, message=FALSE, echo=FALSE}
+D0dat <- data.frame(matrix(NA, ncol = length(c(master.vars, taxo.vars)),
+                            nrow = dim(D0)))
+names(D0dat) <- c("species", taxo.vars, master.vars[-1])
+
+keep <- names(D0)[names(D0) %in% names(D0dat)]
+
+D0dat[match(keep, names(D0dat))] <- D0[,keep]
+D0dat$synonyms <- D0dat$species
+D0dat$data.status = "original"
+D0dat$ref <- paste(substr(D0dat$ref, 1, 10), "...")
+
+D0 <- D0dat
+```
+
+```{r, warning=F, message=FALSE, echo=FALSE}
+
+kable(head(D0, 8), caption = "D0")
+
+```
+
+#### create **`[spp.list]`** object
+
+The next step in setting up our master datasheet is to assign the species list to which all other data are to be matched. In our example, we are using the **species list** in **dataset `D0`** to which we will then add dataset **`D1.csv`**. We can also store taxonomic information on the spp.list, by supplying a `[taxo.dat]` containing taxonomic information on all species in `species` and `{taxo.vars}` 
+
+Columns `master.spp` and `rel.spp` keep track of any species added during the matching process in order to retain data points, rather than discard duplicate datapoints in the dataset to be merged that might be matching to the same individual species on the master species list. In the case of an added species, the value in `master.spp` will be **FALSE** and `rel.spp` will contain the name of the single species in master species list that the matching function identified duplicate matches with. This allows all possible data to be retained but the information in the spp.list allows such datapoints to be removed from analyses if required. 
+
+If there is taxonomic data, this can be included in the **`spp.list`** data.frame. For example, `D0` contains further taxonomic data on **genus**, **family**, **order**. We add this to the **`spp.list`** dataframe:
+
+```{r, warning=F, message=FALSE}
+
+# Create taxo.table
+taxo.dat <- unique(D0[,c("species", taxo.vars)])
+
+spp.list <- createSpp.list(species = taxo.dat$species, 
+                           taxo.dat = taxo.dat, 
+                           taxo.vars)
+
+head(spp.list)
+
+```
+
+
+#### load **`[metadata]`**
+```{r, warning=F, message=FALSE, echo=FALSE}
+kable(md,caption = "T2: example variable metadata sheet")
+```
+
+#### load  **`syn.links`**
+```{r, warning=F, message=FALSE, echo=FALSE}
+
+# Load match data.....................................................................
+
+
+head(syn.links)
+```
+
+<br>
+
+#### create master object
+
+Finally create the **`[[master]]`** object.
+
+```{r, warning=F, message=FALSE}
+# create master shell
+master <- list(data = newMasterData(master.vars), spp.list = spp.list, metadata = metadata)
+
+```
 
 
 
-Once initial settings have been made
+`D0` is almost in the master data format, we just need to remove all taxonomic information. In this case, I subset `D0` to variables not in `{taxo.vars}`.  Now that `D0` is in the master data format, I can update the empty `[[master]]` object with the data. Also, because the species list was generated from D0, we do not need to update the `spp.list`, although the function checks for species matching anyways.
+
+```{r, warning=F, message=FALSE}
+
+D0 <- D0[,!names(D0) %in% taxo.vars]
+
+master <- updateMaster(master, data = D0, spp.list = NULL)
+
+str(master)
+
+```
+
+#### create `[[m]]` object
+
+Next assign the dataset filename, to be used to automate data loading
+
+```{r, warning=F, message=FALSE, echo=F}
+filename <- "D1"
+  
+  m <- matchObj(data.ID = "D1", spp.list = spp.list, status = "unmatched",
+                data = read.csv(paste(input.folder, "csv/", filename, ".csv", sep = ""),
+                                stringsAsFactors=FALSE, fileEncoding = "mac"),
+                sub = "spp.list", filename = filename, 
+                meta = createMeta(meta.vars)) # use addMeta function to manually add metadata.
+
+```  
+
+```{r, eval=FALSE}
+filename <- "D1"
+  
+  m <- matchObj(data.ID = "D1", spp.list = spp.list, status = "unmatched",
+                data = read.csv(paste(input.folder, "csv/", filename, ".csv", sep = ""),
+                                stringsAsFactors=FALSE),
+                sub = "spp.list", filename = filename, 
+                meta = createMeta(meta.vars)) # use addMeta function to manually add metadata.
+
+  
+
+```
+Here, we use the filename  to load the data into `matchObj()`. We define `"spp.list"` as the sub dataset. The match functions will therefore identify and attempt to match unmatched species names in the `{spp.list$species}`. We also create a `[[meta]]` object using function `createMeta(meta.vars)` and supplying `{meta.vars}`.
+
+The resulting **`[[m]]`** object has the following structure:
+
+```{r}
+str(m)
+```  
+
+
+<br>
+
+#### process `[[m]]` object
+
+Once the `[[m]]` object is created, I pipe it a number of through the **`rmacroRDM`** processing functions:
+
+```{r, warning=F, message=FALSE, eval=FALSE}  
+  m <- processDat(m, input.folder, var.omit) %>% 
+    separateDatMeta() %>% 
+    compileMeta(input.folder = input.folder) %>%
+    checkVarMeta(master$metadata) %>%
+    dataMatchPrep()
+```
+<br>
+
+#### let's take a closer look
+
+
+**`processDat()`** cleans the data and removes unwanted variables.
+
+```{r}
+
+  m <- processDat(m, input.folder, var.omit = NULL)
+  
+  str(m$data)
+```
+
+<br>
+
+**`separateDatMeta()`** separates data columns from data, correctly appended as `{meta.vars}`. In this case, the data column `qc` is separated and processed into a valid `meta.var` element and appended to `[[meta]]$qc`. 
+
+```{r}
+
+  m <- separateDatMeta(m)
+  
+  str(m$data)
+  
+  str(m$meta)
+  
+```
+
+<br>
+
+**`compileMeta()`** automates the process of sourcing, checking and setting up metadata to be compiled into the long data format. It will check through the input.folder `{file.sytem}` for correctly labelled and filed `{meta.vars}` data and compile it into missing `m$[[meta]]` elements.
+
+In this case it appends data automatically loaded from the `meta.var` folders. Only data in **ref/** and **n/** have been supplied. Data in **ref/** contains reference data for all species and variables in a single `.csv` file: **`D1.csv`**.  
+
+```{r, warning=F, message=FALSE, echo=F}
+
+ref.meta <-  read.csv(paste(input.folder, "ref/", filename, ".csv", sep = ""))  
+  
+  for(i in 2:length(ref.meta)){
+  ref.meta[!is.na(ref.meta[,i]),i] <- paste(substr(ref.meta[!is.na(ref.meta[,i]),i], 1, 15), "...")}
+  
+  str(ref.meta)
+  
+```
+
+Data in **n/** are given again in **`D1.csv`**:
+
+```{r, warning=F, message=FALSE, echo=F}
+
+n.meta <-  read.csv(paste(input.folder, "n/", filename, ".csv", sep = "")) 
+  
+  str(n.meta)
+```
+
+However `n` data are missing for some `vars` so a group cross-reference table **`D1_n_group.csv`** is also supplied. This table was used to check variable matches and confirm missing meta.var data as NA. Note. NAs not allowed for `meta.var == "ref"`.
+```{r, warning=F, message=FALSE, echo=F}
+
+n.group <-  read.csv(paste(input.folder, "n/", "D1_n_group", ".csv", sep = "")) 
+  
+  str(n.group)
+```
+
+```{r}
+
+  m <- compileMeta(m, input.folder = input.folder)
+```  
+
+```{r, warning=F, message=FALSE, echo=F} 
+  
+  for(i in 2:length(m$meta$ref)){
+m$meta$ref[!is.na(m$meta$ref[,i]),i] <- paste(substr(m$meta$ref[!is.na(m$meta$ref[,i]),i], 1, 15), "...")}
+
+```
+
+```{r} 
+  str(m$meta)
+  
+```
+
+As can be seen, data for `{meta.vars}` `"ref"` and `"n"` have been processed and appended to the appropriate `m$[[meta]]` element.
+
+<br>
+
+**`checkVarMeta()`** checks that all `vars` in `m$[data]` have valid metadata information in `[metadata]`
+
+```{r}
+
+  m <- checkVarMeta(m, master$metadata)
+  
+```
+
+All good.
+
+<br>
+
+**`dataMatchPrep()`** prepares `m$[data]` to track synonym matching.
+
+```{r}
+
+  m <- dataMatchPrep(m)
+  
+  str(m$data)
+  
+```
+
+    
+<br>
+
+***
+
+#### match `[[m]]` object
+
+
+```{r, warning=F, message=FALSE}  
+  
+ m <- dataSppMatch(m, ignore.unmatched = T, 
+                    syn.links = syn.links, addSpp = T)
+  
+ str(m)
+  
+```
+
+When `ignore.unmatched = T`,**sub** species that have not automatically been matched to **set** species are ignored and omitted from the dataset. When `ignore.unmatched = F`, the function halts and appends `{unmatched}` species list to `[[m]]`. 
+  
+#### compile data to master format
+
+```{r, warning=F, message=FALSE}
+ 
+output <- masterDataFormat(m, meta.vars, match.vars, var.vars)
+
+kable(head(output$data))
+
+```
+ 
+```{r, warning=F, message=FALSE} 
+ 
+master <- updateMaster(master, data = output$data, spp.list = output$spp.list)
+ 
+str(master)
+
+
+   
+```
