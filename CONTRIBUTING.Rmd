@@ -1,15 +1,18 @@
 ## Contributing
 
-This is my first package, my first open project and the first time anyone is going to properly look at my code and try to use it. Yikees!
+Thanks for stopping by and showing an interets in the project!
 
-So I could do with a lot of help, from really basic to very technical also.
+This is my first package, my first open project and the first time anyone is going to properly look at my code and try to use it. Yikees! So I could do with a lot of help, from really basic to very technical also.
 
-### crowd sourcing ideas
+### help with ideas
 
-#### assess user needs
-as a first stage, I'm hoping to get some feedback on the features of the framework as they stand and what improvements or added features would better facilitate potential users workflows. So if you think the package might be useful to you, please down hesitate to contribute suggestions through this issue.
+At this stage, the project can really benefit from basic ways in which the framework can be developed before the functions are finalised for the package. Here are a few initial idea forums
 
-#### code review
+#### assess user needs [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/2)
+
+as a first stage, I'm hoping to get some feedback on the features of the framework as they stand and what improvements or added features would better facilitate potential users workflows. So if you think the package might be useful to you, please don't hesitate to contribute suggestions towards improved functionality.
+
+#### code review [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/3)
 
 I'm sure my code could be improved by more experienced coders looking at so feel free to suggest and work on the code as a whole.  
 
@@ -17,21 +20,31 @@ I'm sure my code could be improved by more experienced coders looking at so feel
 
 Currently the frameworks stores information in lists and dataframes. Could this be updated to better formats. eg [`data.table`](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-faq.pdf) or some sort of r database object?
 
+#### standardising data specification [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/7)
+
+Consensus on a basic level of standardised data specification standards for the data products of the package would greatly enhance downstream usability and longevity of data. So this could be a good space to begin to discuss and synthesise what would a model trait metadata structure look like. How can we build both interoperability and flexibility in data management and specification.
+
+
 <br>
+
 ***
 
-### development
+### help develop
 
-There are a number of features that I would like to develop and here, specific skills in 
+There are a number of features already proposed for development, detailed in the [road.map](https://github.com/annakrystalli/rmacroRDM/blob/master/ROADMAP.Rmd)
 
-### continuous help
-
-documentation
+### help in general
 
 - open project management
-- package development
-- code review / optimisation
 - documentation
 
 
 
+***
+
+
+## Global Sprint
+
+### Join me on **June 2-3** at the **Mozilla Science Lab Global Sprint!**
+
+I'll be available online to answer questions and discuss suggestions about all aspects of the project throughout the sprint. 

@@ -1,4 +1,4 @@
-# Roadmap 
+# **Roadmap**
 
 <br>
 
@@ -22,19 +22,25 @@ Currently the frameworks stores information in lists and dataframes. Could this 
 
 consensus on a basic level of standardised data specification standards for the data products of the package would greatly enhance downstream usability and longevity of data. So this could be a good space to begin to discuss and synthesise what would a model trait metadata structure look like. How can we build both interoperability and flexibility in data management and specification.
 
-
 <br>
 
 ***
 
 ## **development**
-### Near future (~1-2 months)
 
+### ongoing
+
+Much of the material surrounding the package is in draft form and could benefit from refinement and development.
+
+Contributions towards updating the **`README`** or ideas for developing the **`vignette`** are always welcome. This includes correcting minor typos and language to adding detail and suggesting addition content, especially from users with suggestions on how demonstration of package functionality could could be more clear or informative.
+
+### near future (~1-2 months)
+
+- **prepare package functions & documentation** [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/8)
 - **automated taxonomic matching - taxonomic tracking** [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/4)
 
-***
 
-### Long Term (~6 months)
+### long term (~6 months)
 
 - **network of citations** to track duplication though reuse of data [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/5)
 
@@ -42,11 +48,3 @@ consensus on a basic level of standardised data specification standards for the 
 
 
 
-***
-
-
-## Global Sprint
-
-### Join me on **June 2-3** at the **Mozilla Science Lab Global Sprint!**
-
-I'll be available online to answer questions and discuss suggestions about all aspects of the project throughout the sprint. 
