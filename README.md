@@ -1,14 +1,12 @@
 # rmacroRDM
 <br>
 
-#### **Please note: Project under construction**
-
 ## Tools to handle trait macroecological datasets in R
 
 
 <br>
 
-### Trait databases
+### **Trait databases**
 
 The purpose of this package is perfectly explained in **Morgan Ernst's** blog post: [**"Trait Databases: What is the End Goal?"**](http://jabberwocky.weecology.org/2015/11/23/trait-databases-what-is-the-end-goal/), following the release of their [data paper](http://esapubs.org/archive/ecol/E096/269/) on the life histories of 21,000+ amniotes (reptiles, birds, mammals).
 
@@ -51,13 +49,13 @@ I'm hoping to compile the code into a package to facilitate data management and 
 
 
 
-## features
+### **features**
 
-### A standardised format
+#### standardised format
 
 The package helps users compile data through a framework of standardised but flexible data objects. Data objects bring together relevant information to better manage the compilation process.   
 
-### store record level data
+#### store record level data
 
 **Morgan Ernst** highlights the importance of compiling observations rather than species averages:
 
@@ -65,15 +63,12 @@ The package helps users compile data through a framework of standardised but fle
 
 So the framework compiles data into a master database of observations and allows multiple observations per species per trait.
 
-### metadata management
+#### metadata management
 
 A major focus of the package is the extraction, management and compilation of metadata information throughout . 
 
 Metadata is managed at a variety of levels including, observation, variable, species and dataset. metadata are also stored on the matching of observations from different taxonomies though synonyms, on the matching of variables across datasets and taxonomic information.
 
-<br>
-
-***
 
 <br>
 
@@ -125,12 +120,11 @@ The idea is to mantain a master database to which new datasets are added.
     + method code
     + method description etc
     
-### **`[[m]]`** match object
-
-Functions in the package  prepare new datasets to be added to the master. This involves collating metadata information, managing and recording synonym matches and compiling and formating the data in the master data format, ready to be update the **`[[master]]`** with. This process is managed through creating, populating and updating a **`[[m]]`** match object.
 
  **`[[m]]` match object**
  
+Functions in the package  prepare new datasets to be added to the master. This involves collating metadata information, managing and recording synonym matches and compiling and formating the data in the master data format, ready to be update the **`[[master]]`** with. This process is managed through creating, populating and updating a **`[[m]]`** match object.
+
  
 - **`"data.ID"`** dataset identifier
 
@@ -154,6 +148,10 @@ Functions in the package  prepare new datasets to be added to the master. This i
 
 - **`"filename"`** name of the dataset filename. Using the filename consistently throughout the file system enables automating sourcing of data.
 - **`"unmatched"`** stores details of unmatched species if species matching incomplete. Can be used to direct manual matching
+
+
+*** 
+<br>
 
 ### **Proposed functionality:**
  
@@ -199,12 +197,16 @@ Package to include functions that allow users to:
 Standardasation of data products allows exploratory apps to be built around them:
 e.g. sex roles in birds exploratory app.
 
+*** 
+<br>
 
+### **Future development**
 
-This could  be further extended to exploring potential biases. [**ISSUE**]()
-        - taxonomic biases (ie calculate taxonomic distinctness of subsets of complete case species for different variable combinations)
-        - data gap biases  
-        - basic covariance structure between variables. Could be used to relate to data gaps to understand how missing values might affect results.
+A interesting added feature could be functionality for exploring potential data biases of analytical datasets. [**ISSUE**]()
+
+- taxonomic biases (ie calculate taxonomic distinctness of subsets of complete case species for different variable combinations)
+- data gap biases  
+- basic covariance structure between variables. Could be used to relate to data gaps to understand how missing values might affect results.
  
 
 
