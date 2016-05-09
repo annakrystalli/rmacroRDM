@@ -2,7 +2,31 @@
 
 This is my first package, my first open project and the first time anyone is going to properly look at my code and try to use it. Yikees!
 
-So I could do with a lot of help, inclusing advice on 
+So I could do with a lot of help, from really basic to very technical also.
+
+### crowd sourcing ideas
+
+#### assess user needs
+as a first stage, I'm hoping to get some feedback on the features of the framework as they stand and what improvements or added features would better facilitate potential users workflows. So if you think the package might be useful to you, please down hesitate to contribute suggestions through this issue.
+
+#### code review
+
+I'm sure my code could be improved by more experienced coders looking at so feel free to suggest and work on the code as a whole.  
+
+#### data format [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/6)
+
+Currently the frameworks stores information in lists and dataframes. Could this be updated to better formats. eg [`data.table`](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-faq.pdf) or some sort of r database object?
+
+<br>
+***
+
+### development
+
+There are a number of features that I would like to develop and here, specific skills in 
+
+### continuous help
+
+documentation
 
 - open project management
 - package development

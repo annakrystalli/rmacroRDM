@@ -30,8 +30,21 @@ setupInputFolder <- function(input.folder, meta.vars = c("qc", "observer", "ref"
 }
 
 
+longMasterFormat <- function(data, master.vars, data.ID){
+  
+  df <- newMasterData(master.vars, nrow = dim(data)[1])
+  
+  keep <- names(data)[names(D0) %in% master.vars]
+  
+  df[match(keep, names(df))] <- data[,keep]
+  df$synonyms <- df$species
+  df$data.status <- "original"
+  df$data.ID <- data.ID
 
+  return(df)
+}
 
+# create spp.list and add taxonomic data
 createSpp.list <- function(species, taxo.dat, taxo.vars){
   
   if(is.null(taxo.vars)){
@@ -493,13 +506,13 @@ updateMaster <- function(master, data, spp.list = NULL){
   
 }
   
-newMasterData <- function(master.vars){
-  data <- data.frame(matrix(vector(), 0, length(master.vars),
+newMasterData <- function(master.vars, nrow = NULL){
+  if(is.null(nrow)){nrow <- 0}
+  data <- data.frame(matrix(vector(), nrow, length(master.vars),
                       dimnames = list(c(), master.vars)))
   return(data)
 }
-  
-  
+    
   
 # look up unmatched species in table (lookup.dat) of known match pairs. 
 # If list is of unmatched data species (ie dataset species is a subset of spp.list), 
@@ -563,7 +576,7 @@ sppMatch <- function(m, unmatched = unmatched, syn.links, addSpp = T){
 
 # match data set to master species list using all available known match pair tables.
 dataSppMatch <- function(m, ignore.unmatched = ignore.unmatched, syn.links = syn.links, 
-                         addSpp = T, save.m = F){
+                         addSpp = T){
   
   sub <- m$sub
   set <- m$set
@@ -605,12 +618,6 @@ dataSppMatch <- function(m, ignore.unmatched = ignore.unmatched, syn.links = syn
       stop("manually match unmatched to continue")}
   }
   
-  if(save.m){
-    dir.create(paste(output.folder, "data/", sep = ""), showWarnings = F)
-    dir.create(paste(output.folder, "data/match objects/", sep = ""), showWarnings = F)
-    
-    save(m, file = paste(output.folder, "data/match objects/", m$data.ID, " match object.RData", 
-                       sep = ""))}
   return(m)}
 
 

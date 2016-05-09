@@ -4,8 +4,11 @@
 # var.over: named vector to override default and assign summarising function for individual variables. 
   # Can also take the name of a prefered dataset to use
 
-widenMaster <- function(vars, species, master, metadata, datSumm = NULL, varSumm = NULL, dupONLY = T){
+widenMaster <- function(vars, species, master, add.taxo = F, taxo.vars = NULL,
+                        datSumm = NULL, varSumm = NULL, dupONLY = T){
 
+  metadata <- master$metadata
+  
   require(dplyr)
   require(tidyr)
   
@@ -18,7 +21,7 @@ widenMaster <- function(vars, species, master, metadata, datSumm = NULL, varSumm
   numbIf <- function(X){lapply(X, FUN = function(x) if(is.numeric(t <- type.convert(x))) t else x)}
   
 
-  df <- master[master$species %in% species & master$var %in% vars, ]
+  df <- master$data[master$data$species %in% species & master$data$var %in% vars, ]
   #df$value <- trimws(df$value)
   
   # create species x var unique ids and identify duplicate ids
@@ -78,17 +81,25 @@ widenMaster <- function(vars, species, master, metadata, datSumm = NULL, varSumm
       names(values) <- cl.ids
       
       # remove all data rows with duplicates (ie all dup.ids) from df and append summarised data rows
-      df.w <- df[-which(df$Cluster_ID %in% dup.ids), names(df) %in% c("species","order", "family", "var", "value")]
-      add.df <- unique(dup.df[,c("species","order", "family","var", "Cluster_ID")])
+      df.w <- df[-which(df$Cluster_ID %in% dup.ids), names(df) %in% c("species","var", "value")]
+      add.df <- unique(dup.df[,c("species", "var", "Cluster_ID")])
       add.df <- cbind(add.df, value = values[match(add.df$Cluster_ID, cl.ids)])
       add.df <- add.df[,names(add.df) != "Cluster_ID"]
       df.w <- rbind(df.w, add.df)
 
-  }else{df.w <- df[, names(df) %in% c("species", "order", "family", "var", "value")]}
+  }else{df.w <- df[, names(df) %in% c("species", "var", "value")]}
 
  
   
   wdf <- spread(df.w, key = var, value, convert = F)
+  
+  if(add.taxo){
+    wdf <- data.frame(species = wdf[,"species"], 
+               master$spp.list[match(wdf$species, master$spp.list$species), taxo.vars],
+               wdf[, names(wdf) != "species"])
+  }
+  
+  
   
   return(wdf)
   

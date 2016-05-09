@@ -217,7 +217,7 @@ options(stringsAsFactors = F)
 
 output.folder <- "~/Documents/workflows/rmacroRDM/data/output/"
 input.folder <- "~/Documents/workflows/rmacroRDM/data/input/"
-script.folder <- "~/Documents/workflows/rmacroRDM/"
+script.folder <- "~/Documents/workflows/rmacroRDM/R/"
 
 ```
 
@@ -362,7 +362,7 @@ options(stringsAsFactors = F)
 
 output.folder <- "~/Documents/workflows/rmacroRDM/data/output/"
 input.folder <- "~/Documents/workflows/rmacroRDM/data/input/"
-script.folder <- "~/Documents/workflows/rmacroRDM/"
+script.folder <- "~/Documents/workflows/rmacroRDM/R/"
 
 # Functions & Packages
 
