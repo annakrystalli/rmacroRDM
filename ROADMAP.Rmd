@@ -1,21 +1,36 @@
 # Roadmap 
 
+<br>
+
 ## First phase
-
-
 
 ### Crowdsourcing and planning
 
-#### Workflow Review
+#### Functionality Review
 
 I am interested in making the package work for as wide a demographic as possible which may therefore require expanding functionality. So I would at a first stage crowdsource ideas and develop a final plan on package development.
 
 #### Code Review
 
-
 Most of the functionality of the proposed package has already been developed and there is a repository of my **`r`** code that could be scavenged as a starting point. I envisage a code review element to the initial stage and welcome feedback on how the code could be improved.
+
+### current issues:
+
+**Long term:**
+
+- **data structure** currently in lists. Could be a more integrated database object
+- **automated taxonomic matching - taxonomic tracking**
+- **network of citations** to track duplication though reuse of data 
 
 
 ***
+
+## Development
+
+
+
+
+
+
 
 ## Global Sprint
