@@ -75,60 +75,6 @@ Metadata is managed at a variety of levels including, observation, variable, spe
 
 ***
 
-
-### **Proposed functionality:**
- 
-#### see [**vignette**](https://github.com/annakrystalli/rmacroRDM/blob/master/vignette.md) for a demo of current functionality
-
-<br>
-
-#### Matching and tracking taxonomy metadata
-
-
-- integrate [**`taxize`**]() [**ISSUE**]()
-  - auto correct species names input errors with fuzzy matching
-  - search for synonyms
-- build network of synonyms
-  - maintain a database of synonym links
-
-
-#### Matching and tracking observation metadata
-
-- QC
-- observer details
-- synonym version control
-- ref
-
-#### Matching and tracking variable metadata
-
-- enforce complete metadata to add variables. Check consistency of units before adding data.
-- metadata readily available for plotting and extraction for publication.
-
-
-#### Basic Quality control functionality [**ISSUE**]()
-- some simple tools to help identify errors, outliers etc
-
-#### Produce analytical datasets
-
-Package to include functions that allow users to:
-
-- interrogate database, extract some information on data avalaibility (partcularly complete cases resulting from different combination of variables).
-- Allow to specify taxonomic and variable subsets
-- Produce **wide analytical dataset**. Contain a selection of functions to summarise duplicate datapoints according to data type. 
-    - output to include variable subset metadata
-    - a list of all references used to create analytical dataset.
-
-Standardasation of data products allows exploratory apps to be built around them:
-e.g. sex roles in birds exploratory app.
-
-
-
-This could  be further extended to exploring potential biases. [**ISSUE**]()
-        - taxonomic biases (ie calculate taxonomic distinctness of subsets of complete case species for different variable combinations)
-        - data gap biases  
-        - basic covariance structure between variables. Could be used to relate to data gaps to understand how missing values might affect results.
- 
-
 <br>
 
 ***
@@ -140,7 +86,7 @@ This could  be further extended to exploring potential biases. [**ISSUE**]()
 #### Structure it like a mini database. 
 The idea is to mantain a master database to which new datasets are added.
 
-#### Current structure would consist of:
+#### Current framework structure consists of:
 
 <br>
 **`[[master]]` object**
@@ -179,21 +125,95 @@ The idea is to mantain a master database to which new datasets are added.
     + method code
     + method description etc
     
+### **`[[m]]`** match object
+
+Functions in the package  prepare new datasets to be added to the master. This involves collating metadata information, managing and recording synonym matches and compiling and formating the data in the master data format, ready to be update the **`[[master]]`** with. This process is managed through creating, populating and updating a **`[[m]]`** match object.
+
+ **`[[m]]` match object**
+ 
+ 
+- **`"data.ID"`** dataset identifier
+
+- **`[spp.list]`** master species list to which all datasets are to be matched. tracts any additions (if allowed) during the matching process.
+
+- **`[data]`** dataframe containing the dataset to be added
+
+- **`"sub"`** `"spp.list"` or `"data"`. Specifies which `[[m]]` element contains the smaller set of species. Unmatched species in the subset are attempted to be matched through synonyms to `[[m]]` element datapoints in the larger species set. 
+
+- `"set"` Specifies which `[[m]]` element contains the larger set of species. Automatically determined from `m$sub`.
+
+- `"status"` Records status of `[[m]]` within the match process. varies between `{"unmatched", "full_match", "incomplete_match: (n unmatched)"}`
+
+- **`[[meta]]`** list, structure set through `{meta.vars}`. collates  observation metadata for each `"meta.var"`.
+
+     - `"ref"`: the reference from which observation has been sourced. This is the only `meta.var` that *MUST* be correctly supplied for matching to proceed.
+     - `"qc"`: any quality control information regarding individual datapoints. Ideally, a consistent scoring system used across compiled datasets.
+     - `"observer"`: The name of the observer of data points. Used to allow assessment of observer bias, particularly in the case of data sourced manually form literature.
+     - `"n"`: if value is based on a summary of multiple observations, the number of original observations value is based on.
+     - `"notes"`: any notes associated with individual observations.
+
+- **`"filename"`** name of the dataset filename. Using the filename consistently throughout the file system enables automating sourcing of data.
+- **`"unmatched"`** stores details of unmatched species if species matching incomplete. Can be used to direct manual matching
+
+### **Proposed functionality:**
+ 
+#### see [**vignette**](https://github.com/annakrystalli/rmacroRDM/blob/master/vignette.md) for a demo of current functionality
+
+<br>
+
+#### Matching and tracking taxonomy metadata
+
+
+- integrate [**`taxize`**](https://cran.r-project.org/web/packages/taxize/vignettes/taxize_vignette.html) [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/4)
+  - auto correct species names input errors with fuzzy matching
+  - search for synonyms
+- build project specific database of synonym links
+  - use as network of synonyms to track data point matching
+
+
+#### Matching and tracking observation metadata
+
+- QC
+- observer details
+- **ref**: **[[ISSUE](https://github.com/annakrystalli/rmacroRDM/issues/5)]** as with tracking taxonomic metadata, reference data sourcing and handling could also be more formalised and integrated. link to reference databases.
+
+#### Matching and tracking variable metadata
+
+- enforce complete metadata to add variables. Check consistency of units before adding data.
+- metadata readily available for plotting and extraction for publication.
+
+
+#### Basic Quality control functionality [**ISSUE**]()
+- some simple tools to help identify errors, outliers etc
+
+#### Produce analytical datasets
+
+Package to include functions that allow users to:
+
+- interrogate database, extract some information on data avalaibility (partcularly complete cases resulting from different combination of variables).
+- Allow to specify taxonomic and variable subsets
+- Produce **wide analytical dataset**. Contain a selection of functions to summarise duplicate datapoints according to data type. 
+    - output to include variable subset metadata
+    - a list of all references used to create analytical dataset.
+
+Standardasation of data products allows exploratory apps to be built around them:
+e.g. sex roles in birds exploratory app.
+
+
+
+This could  be further extended to exploring potential biases. [**ISSUE**]()
+        - taxonomic biases (ie calculate taxonomic distinctness of subsets of complete case species for different variable combinations)
+        - data gap biases  
+        - basic covariance structure between variables. Could be used to relate to data gaps to understand how missing values might affect results.
+ 
+
+
     
 ## Development:
     
-    
-- **network of citations** to track duplication though reuse of data 
-- **automated taxonomic matching - taxonomic tracking**
-- **data structure** currently in lists. Could be a more integrated database object
-
 
 Smaller
 - cross reference by observation and species id?
-- 
+ 
 
 
-[**Tom Webb's blog post**](http://www.scilogs.com/mola_mola/trait-databases-the-desirable-and-the-possible/) does a good job of explaining the general pitfalls of compiling trait data. While much of the post was on the difficulty of defining a trait, ultimately, good data management and metadata specification can atleast allow for downstream work on that aspect.
-
-
-I believe that certainly some scope for standardisation. as trait databases of individual observations amass, the relationship between variables can help with multidimensionality. key and there is 
