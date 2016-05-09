@@ -16,10 +16,13 @@ Most of the functionality of the proposed package has already been developed and
 
 ### current issues:
 
-**Long term:**
+**short term:**
 
 - **data structure** currently in lists. Could be a more integrated database object
-- **automated taxonomic matching - taxonomic tracking**
+- **automated taxonomic matching - taxonomic tracking** [**ISSUE**]()
+
+**Long term:**
+
 - **network of citations** to track duplication though reuse of data 
 
 
