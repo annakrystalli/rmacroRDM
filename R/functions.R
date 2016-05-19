@@ -822,3 +822,22 @@ whichNext <- function(x = output){
 }
 
 
+
+
+removeData <- function(data = master$data, remove = outliers){
+  
+  remove <- NULL
+  for(i in 1:dim(outliers)[1]){
+    
+    remove <- c(remove, which(data$species == outliers[i, "species"] &
+                                data$var == outliers[i, "var"] & data$data.ID == outliers[i, "data.ID"],
+                              arr.ind = T))
+  }
+  
+  data <- data[-remove,]
+  
+  return(data)
+}
+
+
+
