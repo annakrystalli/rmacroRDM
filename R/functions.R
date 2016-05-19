@@ -824,7 +824,7 @@ whichNext <- function(x = output){
 
 
 
-removeData <- function(data = master$data, remove = outliers){
+removeData <- function(data = master$data, outliers = outliers){
   
   remove <- NULL
   for(i in 1:dim(outliers)[1]){
