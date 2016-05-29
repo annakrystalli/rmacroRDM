@@ -8,19 +8,19 @@
 
 #### functionality review / user assessment [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/2)
 
-I am interested in making the package work for as wide a demographic as possible which may therefore require expanding functionality. So I would at a first stage crowdsource ideas and develop a final plan on package development.
+I am interested in making the package work for as wide a demographic as possible which may therefore require expanding functionality. So, I would at a first stage crowdsource ideas and develop a final plan on package development.
 
 #### code review [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/3)
 
-Most of the functionality of the proposed package has already been developed and there is a repository of **`r`** code as a starting point. I envisage a code review element to the initial stage and welcome feedback on how the code could be improved.
+Most of the functionality of the proposed package has already been developed and there is a directory of **`r`** code as a starting point. I envision a code review element to the initial stage and welcome feedback on how the code could be improved.
 
 #### data format [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/6)
 
-Currently the frameworks stores information in lists and dataframes. Could this be updated to better formats. eg [`data.table`](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-faq.pdf) or some sort of r database object?
+Currently, the framework stores information in lists and dataframes. Could this be updated to better formats. eg [`data.table`](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-faq.pdf) or some sort of r database object?
 
 #### standardising data specification [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/7)
 
-consensus on a basic level of standardised data specification standards for the data products of the package would greatly enhance downstream usability and longevity of data. So this could be a good space to begin to discuss and synthesise what would a model trait metadata structure look like. How can we build both interoperability and flexibility in data management and specification.
+Consensus on a basic level of data specification standards for the data products of the package would greatly enhance downstream usability and longevity of data. So, this could be a good space to begin to discussing and synthesising what a model trait metadata structure might look like. How can we build both interoperability and flexibility in data management and specification?
 
 <br>
 
@@ -38,7 +38,6 @@ Contributions towards updating the **`README`** or ideas for developing the **`v
 
 - **prepare package functions & documentation** [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/8)
 - **automated taxonomic matching - taxonomic tracking** [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/4)
-
 
 ### long term (~6 months)
 
