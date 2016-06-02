@@ -8,7 +8,7 @@
 
 ### **Trait databases**
 
-The purpose of this package is perfectly explained in **Morgan Ernst's** blog post: [**"Trait Databases: What is the End Goal?"**](http://jabberwocky.weecology.org/2015/11/23/trait-databases-what-is-the-end-goal/), following the release of their [data paper](http://esapubs.org/archive/ecol/E096/269/) on the life histories of 21,000+ amniotes (reptiles, birds, mammals).
+The purpose of this package is perfectly explained in **Morgan Ernest's** blog post: [**"Trait Databases: What is the End Goal?"**](http://jabberwocky.weecology.org/2015/11/23/trait-databases-what-is-the-end-goal/), following the release of their [data paper](http://esapubs.org/archive/ecol/E096/269/) on the life histories of 21,000+ amniotes (reptiles, birds, mammals).
 
 
 > Trait databases are all the rage these days, for good reason. Traits are interesting from evolutionary and ecological perspectives: How and why do species differ in traits, how do traits evolve, how quickly do traits change in response to changing environment, and what impacts do these differences have on community assembly and ecosystem function. They have the potential to link individual performance with local, regional, and even global processes. There’s lots of trait data out there, but most of it has been buried in papers, books, theses, gray literature, field guides, etc. 
@@ -58,7 +58,7 @@ The package helps users compile data through a framework of standardised but fle
 
 #### store record level data
 
-**Morgan Ernst** highlights the importance of compiling observations rather than species averages:
+**Morgan Ernest** highlights the importance of compiling observations rather than species averages:
 
 > Having any info is still better than no info, but often we need info on variability across individuals within a species or we want to know how the trait might vary with changes in the environment. For this, we need record-level data. 
 
