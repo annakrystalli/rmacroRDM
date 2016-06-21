@@ -73,7 +73,7 @@ This framework also can handle multiple intraspecific datapoints for individual 
 
 ## match objects {`m`}
 
-Functions in the rmacroRDM package have been designed to receive and update a match object (**`m`**). This helps keep all the information relating to the matching of a particular dataset together, updatwed at the same time and available and updated at each stage.
+Functions in the rmacroRDM package have been designed to receive and update a match object (**`m`**). This helps keep all the information relating to the matching of a particular dataset together, updated at the same time and available and updated at each stage.
 
 Match objects `[[m]]` are defined by the function **`matchObj()`** 
 

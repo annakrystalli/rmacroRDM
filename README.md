@@ -124,27 +124,27 @@ The idea is to maintain a master database to which new datasets are added.
 
  **`[[m]]` match object**
  
-Functions in the package prepare new datasets to be added to the master. This involves collating metadata information, managing and recording synonym matches and compiling and formating the data in the master data format, ready to be update the **`[[master]]`** with. This process is managed through creating, populating and updating a **`[[m]]`** match object.
+Functions in the package prepare new datasets to be added to the master. This involves collating metadata information, managing and recording synonym matches and compiling and formating the data in the master data format, so it is ready to update the **`[[master]]`**. This process is managed through creating, populating and updating a **`[[m]]`** match object.
 
  
 - **`"data.ID"`** dataset identifier
 
-- **`[spp.list]`** master species list to which all datasets are to be matched. tracts any additions (if allowed) during the matching process.
+- **`[spp.list]`** master species list to which all datasets are to be matched. Tracks any additions (if allowed) during the matching process.
 
 - **`[data]`** dataframe containing the dataset to be added
 
 - **`"sub"`** `"spp.list"` or `"data"`. Specifies which `[[m]]` element contains the smaller set of species. Unmatched species in the subset are attempted to be matched through synonyms to `[[m]]` element datapoints in the larger species set. 
 
-- `"set"` Specifies which `[[m]]` element contains the larger set of species. Automatically determined from `m$sub`.
+- **`"set"`** Specifies which `[[m]]` element contains the larger set of species. Automatically determined from `m$sub`.
 
-- `"status"` Records status of `[[m]]` within the match process. varies between `{"unmatched", "full_match", "incomplete_match: (n unmatched)"}`
+- **`"status"`** Records status of `[[m]]` within the match process. Varies between `{"unmatched", "full_match", "incomplete_match: (n unmatched)"}`
 
-- **`[[meta]]`** list, structure set through `{meta.vars}`. collates  observation metadata for each `"meta.var"`.
+- **`[[meta]]`** list, structure set through `{meta.vars}`. Collates observation metadata for each `"meta.var"`.
 
      - `"ref"`: the reference from which observation has been sourced. This is the only `meta.var` that *MUST* be correctly supplied for matching to proceed.
      - `"qc"`: any quality control information regarding individual datapoints. Ideally, a consistent scoring system used across compiled datasets.
-     - `"observer"`: The name of the observer of data points. Used to allow assessment of observer bias, particularly in the case of data sourced manually form literature.
-     - `"n"`: if value is based on a summary of multiple observations, the number of original observations value is based on.
+     - `"observer"`: The name of the observer of data points. Used to allow assessment of observer bias, particularly in the case of data sourced manually from the literature.
+     - `"n"`: if value is based on a summary of multiple observations, the number of original observations the value is based on.
      - `"notes"`: any notes associated with individual observations.
 
 - **`"filename"`** name of the dataset filename. Using the filename consistently throughout the file system enables automating sourcing of data.
@@ -189,8 +189,8 @@ Functions in the package prepare new datasets to be added to the master. This in
 Package to include functions that allow users to:
 
 - interrogate database, extract some information on data availability (particularly complete cases resulting from different combination of variables).
-- Allow to specify taxonomic and variable subsets
-- Produce **wide analytical dataset**. Contain a selection of functions to summarise duplicate datapoints according to data type. 
+- allow specifying taxonomic and variable subsets
+- produce **wide analytical dataset**. Contain a selection of functions to summarise duplicate datapoints according to data type. 
     - output to include variable subset metadata
     - a list of all references used to create analytical dataset.
 
@@ -198,7 +198,7 @@ Package to include functions that allow users to:
 Standardisation of data products allows exploratory apps to be built around them, eg: 
 
 - [**sex roles in birds exploratory app**](https://annakrystalli.shinyapps.io/bird_app/): app is built around outputs of the **`rmacroRDM`** workflow. I'm hoping to adapt it so that rmacroRDM data products containing all data required to power the app can be uploaded.
-- The data visualised is a random sample of a larger dataset we have been working on. The data will be open on publication but until then, it represent a small sample and species names have been randomised.
+- The data visualised is a random sample of a larger dataset we have been working on. The data will be open on publication. Until then, it is represented by a small sample and species names have been randomised.
 
 *** 
 <br>
