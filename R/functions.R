@@ -350,7 +350,7 @@ processDat <- function(m, input.folder = input.folder, var.omit){
   
   data$species <- gsub(" ", "_", data$species)
   
-  data <- data[, !names(data) %in% var.omit]
+  data <- data[,!names(data) %in% var.omit, drop = F]
   
   m$data <- data
   
@@ -564,7 +564,8 @@ sppMatch <- function(m, unmatched = unmatched, syn.links, addSpp = T){
   
   if(is.null(match.dd)){}else{
     add.dd <- cbind(match.dd, data[match(match.dd$synonyms, data$species), 
-                                   !names(data) %in% c("species", "synonyms")])
+                                   !names(data) %in% c("species", "synonyms"),
+                                   drop = F])
     add.dd$data.status <- "modified"
     data <- rbind(data, add.dd)}
   
@@ -575,8 +576,8 @@ sppMatch <- function(m, unmatched = unmatched, syn.links, addSpp = T){
 
 
 # match data set to master species list using all available known match pair tables.
-dataSppMatch <- function(m, ignore.unmatched = ignore.unmatched, syn.links = syn.links, 
-                         addSpp = T){
+dataSppMatch <- function(m, syn.links = syn.links, 
+                         addSpp = T, ignore.unmatched = T){
   
   sub <- m$sub
   set <- m$set
@@ -599,24 +600,29 @@ dataSppMatch <- function(m, ignore.unmatched = ignore.unmatched, syn.links = syn
   #generate next unmatched species list
   unmatched <- m[[sub]]$species[!(m[[sub]]$species %in% m[[set]]$species)]
   
-  # Trim data
-  m$data <- m$data[m$data$species %in% m$spp.list$species,]
-  
   # if no more species unmatched break loop
   if(length(unmatched) == 0){
     print(paste(m$data.ID, "match complete"))
     m$status <- "full_match"
+    # Trim data
+    m$data <- m$data[m$data$species %in% m$spp.list$species,]
   }else{
     
     print(paste("match incomplete,",length(unmatched), sub, "datapoints unmatched"))
     m$status <- paste("incomplete_match:", length(unmatched)) 
-    
     m$unmatched <- data.frame(species = unmatched, synonyms = NA)
     
-    if(!ignore.unmatched){
-      print(m$unmatched)
-      stop("manually match unmatched to continue")}
+    if(ignore.unmatched){
+      # Trim data
+      m$data <- m$data[m$data$species %in% m$spp.list$species,]
+    }else{
+      print(paste("manual match required to continue"))
+      m$status <- paste(m$status, "- untrimmed")  
+    }
+    
   }
+  
+
   
   return(m)}
 
@@ -748,77 +754,51 @@ IDSppMatch <- function(file = "Display & resource_scores.csv",
 
 # Tests whether a proposed synonym/species has a match in the spp.list/data and updates the mmatched file for the data set.
 # Takes a match object (x) all information needed is stored within the file
-testSynonym <- function(spp, x){
-  #identify next species being matched and print
-  mmatch <- read.csv(paste("r data/match data/",x$data.ID," mmatched.csv", sep = ""),
-                     stringsAsFactors=FALSE)  
+testSynonym <- function(syn, m){
   
-  sub <- x$sub 
+  NAs <- which(is.na(m$unmatched$synonyms))
   
-  
-  if(sub == "spp.list"){
-    set <- "data"
-    lookup <- "species"
-    lookupin <- "synonyms"
+  if(length(NAs) == 0){
+    print("no unmatched species")
+    return(m)
   }
-  if(sub == "data"){
-    set <- "spp.list"
-    lookup <- "synonyms"
-    lookupin <- "species"
-  }   
   
-  spp.m <- mmatch[[lookup]][min(which(mmatch[lookupin] == "" | is.na(mmatch[[lookupin]])))]
-  print(paste("match", lookup, spp.m))
+  spp <- m$unmatched$species[min(NAs)]
+  syn <- gsub(" ","_", syn)
+  match <- any(syn %in% c(m[[m$set]]$species, "Extinct","New"))
   
-  #test potential synonym 
-  if(spp %in% c("Extinct","New")){
-    print(paste("match", lookupin, spp))
-    mmatch[mmatch[lookup] == spp.m, lookupin] <- spp
-    next.spp <-mmatch[[lookup]][min(which(mmatch[lookupin] == "" | is.na(mmatch[[lookupin]])))]
+  print(paste("unmatched species:", spp,"matched to", syn, "?"))
+  print(match)
+  
+  if(match){
     
-    print(paste("next", lookup, ":", next.spp))
-    write.csv(mmatch, paste("r data/match data/",x$data.ID," mmatched.csv", sep = ""),
-              row.names = F)
-  }else{
-    spp <- gsub(" ","_", spp)
-    match <- any(spp %in% x[[set]]$species)  
-    print(paste("match", lookupin, spp))
-    print(match)
-    
-    if(match){
-      
-      mmatch[mmatch[lookup] == spp.m, lookupin] <- spp
-      next.spp <-mmatch[[lookup]][min(which(mmatch[lookupin] == "" | is.na(mmatch[[lookupin]])))]
-      
-      print(paste("next", lookup, ":", next.spp))
-      write.csv(mmatch, paste("r data/match data/",x$data.ID," mmatched.csv", sep = ""),
-                row.names = F)
-      
-    }}
+    m$unmatched$synonyms[m$unmatched$species == spp] <- syn
+    NAs <- which(is.na(m$unmatched$synonyms))
+    if(length(NAs) == 0){
+      print("no unmatched species")
+    }else{
+      spp <- m$unmatched$species[min(NAs)]
+      print(paste("next unmatched:", spp))
+    }
+  }
   
+  return(m)
 }
-whichNext <- function(x = output){
-  #identify next species being matched and print
-  mmatch <- read.csv(paste("r data/match data/",x$data.ID," mmatched.csv", sep = ""),
-                     stringsAsFactors=FALSE)  
+
+
+
+
+whichNext <- function(m){
   
-  sub <- x$sub 
+  NAs <- which(is.na(m$unmatched$synonyms))
   
-  
-  if(sub == "spp.list"){
-    set <- "data"
-    lookup <- "species"
-    lookupin <- "synonyms"
+  if(length(NAs) == 0){
+    print("no unmatched species")
+    return(m)
+  } else {
+    spp <- m$unmatched$species[min(NAs)]
+    print(paste("next unmatched", spp)) 
   }
-  if(sub == "data"){
-    set <- "spp.list"
-    lookup <- "synonyms"
-    lookupin <- "species"
-  }   
-  
-  spp.m <- mmatch[[lookup]][min(which(mmatch[lookupin] == "" | is.na(mmatch[[lookupin]])))]
-  print(paste("match", lookup, spp.m))
-  
 }
 
 
