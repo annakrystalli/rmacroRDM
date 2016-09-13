@@ -16,7 +16,9 @@
 #' @examples
 #' setupInputFolder()
 
-setupInputFolder <- function(input.folder, meta.vars = c("qc", "observer", "ref", "n", "notes")){
+setupInputFolder <- function(input.folder, 
+                             meta.vars = c("qc", "observer", "ref", "n", "notes"),
+                             migrate = F, ...){
   
   if(!file.exists(input.folder)){stop("invalid input.folder path")}
   
@@ -24,10 +26,38 @@ setupInputFolder <- function(input.folder, meta.vars = c("qc", "observer", "ref"
     input.folder <- paste(input.folder, "/", sep = "")
   }
   
-  lapply(c("raw", "csv", "metadata", "r data", "taxo", meta.vars),
+  # create data folders
+  lapply(c("raw", "pre", "post", "metadata", "r data", "taxo"),
          FUN = function(x){dir.create(paste(input.folder, x, sep =""), 
                                       showWarnings = F)})
+  # create pre & post data folders 
+  lapply(X = c("pre", "post"), f = c("csv", meta.vars),
+         FUN = function(x, f){lapply(f, FUN = function(f, x){dir.create(paste(input.folder, x, "/", f, sep =""), 
+                                                                        showWarnings = F)}, x = x)})
+  # migrate folder function
+  migrate_folder <- function(folder, remove.f = F) {
+    
+    files <- list.files(paste(input.folder, folder, sep =""), full.names = T)[
+      grep(".csv", list.files(paste(input.folder, folder, sep ="")))]
+    
+    
+    file.copy(from = files, 
+              to = paste(input.folder, "pre/", gsub("pre_", "", folder),"/", sep =""), 
+              recursive = F, overwrite = F, 
+              copy.mode = TRUE, copy.date = TRUE)
+    
+    if(remove.f){
+      file.remove(folder) 
+    }
+  }
+  
+  # migrate from old folders
+  if(migrate == T){
+    f = c("csv", meta.vars)
+    lapply(f, migrate_folder, remove.f = F)
+  }
 }
+
 
 
 longMasterFormat <- function(data, master.vars, data.ID){
@@ -804,6 +834,15 @@ whichNext <- function(m){
 
 
 
+#' Title
+#'
+#' @param data 
+#' @param outliers 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 removeData <- function(data = master$data, outliers = outliers){
   
   remove <- NULL
