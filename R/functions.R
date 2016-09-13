@@ -250,13 +250,16 @@ compileMeta <- function(m, input.folder = NULL, fileEncoding = NULL){
     
     if(is.null(metav.dd)){
       if(is.null(m$filename)){}else{
-        if(!paste(m$filename, "csv", sep = ".") %in% list.files(paste(input.folder, meta.var, "/", sep =""))){}else{
+        if(!paste(m$filename, "csv", sep = ".") %in% list.files(paste(input.folder, "post/", meta.var, "/", sep =""))){}else{
           
           if(is.null(fileEncoding)){
-          metav.dd <- read.csv(paste(input.folder, meta.var, "/", m$filename, ".csv",sep = ""), 
+          metav.dd <- read.csv(paste(input.folder, "post/", meta.var, "/", m$filename, ".csv",sep = ""), 
                                stringsAsFactors = F)}else{
-                                 metav.dd <- read.csv(paste(input.folder, meta.var, "/", m$filename, ".csv",sep = ""), 
-                                                      stringsAsFactors = F, fileEncoding = fileEncoding)}
+                                 metav.dd <- read.csv(paste(input.folder, "post/", meta.var, "/", m$filename, ".csv",sep = ""), 
+                                                      stringsAsFactors = F, fileEncoding = fileEncoding, 
+                                                      na.strings = c("NA", "", " "), 
+                                                      blank.lines.skip = T,
+                                                      strip.white = T)}
           
           # clean loaded metav.dd
           while(sum(na.omit(metav.dd == " ")) > 0){metav.dd[metav.dd == " "] <- ""}
@@ -360,26 +363,29 @@ compileMeta <- function(m, input.folder = NULL, fileEncoding = NULL){
 #' @export
 #' @examples
 #' processDat()
-processDat <- function(m, input.folder = input.folder, var.omit){
+processDat <- function(m, input.folder = input.folder, var.omit, ...){
+  
+  filename <- gsub(".csv", "", m$filename)
   
   data <- m$data
   
   if(is.null(data)){
-    data <- read.csv(paste(input.folder, "csv/", m$filename, ".csv", sep = ""),  
-                     stringsAsFactors=FALSE)}
+    data <- read.csv(paste(input.folder, "post/", "csv/", filename, ".csv", sep = ""),  
+                     stringsAsFactors=FALSE, na.strings = c("NA", "", " "),
+                     fileEncoding = fileEncoding, 
+                     na.strings = c("NA", "", " "), 
+                     blank.lines.skip = T,
+                     strip.white = T)}
   
   
   if(anyDuplicated(data$species) > 0){stop("duplicate species name in match dat")}
   
-  if(any(data$species == "")){
-    data <- data[-which(data$species == ""),]}
+  if(any(is.na(data$species))){
+    data <- data[!is.na(data$species),]}
   
-  #Make sure there are no empty cells and replace any with NA cells
-  data[which(data== "", arr.ind = T)] <- NA
   require(stringr)
   
   data$species <- gsub(" ", "_", data$species)
-  
   data <- data[,!names(data) %in% var.omit, drop = F]
   
   m$data <- data
