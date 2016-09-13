@@ -378,7 +378,7 @@ processDat <- function(m, input.folder = input.folder, var.omit, ...){
                      strip.white = T)}
   
   
-  if(anyDuplicated(data$species) > 0){stop("duplicate species name in match dat")}
+  if(anyDuplicated(data$species) > 0){warning("duplicate species name in match dat")}
   
   if(any(is.na(data$species))){
     data <- data[!is.na(data$species),]}
