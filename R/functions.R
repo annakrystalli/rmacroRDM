@@ -32,10 +32,13 @@ setupInputFolder <- function(input.folder,
                                       showWarnings = F)})
   # create pre & post data folders 
   lapply(X = c("raw", "pre", "post"), f = c("csv", meta.vars),
-         FUN = function(x, f){lapply(f, FUN = function(f, x){
+         FUN = function(x, f){
            if(x == "raw"){f <- c(f, "metadata","taxo")}
+           lapply(f, FUN = function(f, x){
            dir.create(paste(input.folder, x, "/", f, sep =""),
-                      showWarnings = F)}, x = x)})
+                      showWarnings = F)}, 
+           x = x)})
+  
   # migrate folder function
   migrate_folder <- function(folder, remove.f = F) {
     
@@ -237,7 +240,7 @@ code2FullRef <- function(ref.codes, ref.table){
 #' @examples
 #' compileMeta()
 #' 
-compileMeta <- function(m, input.folder = NULL, fileEncoding = NULL){
+compileMeta <- function(m, input.folder = NULL, fileEncoding = ""){
   
   meta <- m$meta
   data <- m$data
@@ -252,20 +255,12 @@ compileMeta <- function(m, input.folder = NULL, fileEncoding = NULL){
     
     if(is.null(metav.dd)){
       if(is.null(m$filename)){}else{
-        if(!paste(m$filename, "csv", sep = ".") %in% list.files(paste(input.folder, "post/", meta.var, "/", sep =""))){}else{
+        if(!m$filename %in% list.files(paste(input.folder, "post/", meta.var, "/", sep =""))){}else{
           
-          if(is.null(fileEncoding)){
-          metav.dd <- read.csv(paste(input.folder, "post/", meta.var, "/", m$filename, ".csv",sep = ""), 
-                               stringsAsFactors = F)}else{
-                                 metav.dd <- read.csv(paste(input.folder, "post/", meta.var, "/", m$filename, ".csv",sep = ""), 
-                                                      stringsAsFactors = F, fileEncoding = fileEncoding, 
-                                                      na.strings = c("NA", "", " "), 
-                                                      blank.lines.skip = T,
-                                                      strip.white = T)}
-          
-          # clean loaded metav.dd
-          while(sum(na.omit(metav.dd == " ")) > 0){metav.dd[metav.dd == " "] <- ""}
-          metav.dd[metav.dd == ""] <- NA
+
+          metav.dd <- read.csv(paste(input.folder, "post/", meta.var, "/", m$filename,sep = ""), 
+                               stringsAsFactors = F, fileEncoding = fileEncoding)
+
         }}}
 
   # Process available metadata and add to meta
@@ -288,7 +283,7 @@ compileMeta <- function(m, input.folder = NULL, fileEncoding = NULL){
           # data columns. Information should be provided in a meta.var group look up table. check whether it exists.
           if(length(grep(paste("_", meta.var, "_group", sep = ""), 
                          grep(gsub(".csv", "",m$filename), 
-                              list.files(paste(input.folder, meta.var, "/", sep ="")), 
+                              list.files(paste(input.folder, "post/",meta.var, "/", sep ="")), 
                               value = T)
                          )
                     ) == 0){
@@ -297,7 +292,7 @@ compileMeta <- function(m, input.folder = NULL, fileEncoding = NULL){
             # to meta group names. If data variable has no metadata, leave as NA in group .
             metav.grp <- data.frame(var = check.vars, grp = "")
             metav.grp$metav.grp[metav.grp$var %in% names(metav.dd)] <- metav.grp$var[metav.grp$var %in% names(metav.dd)]
-            write.csv(metav.grp, paste(paste(input.folder, meta.var, "/", sep =""), 
+            write.csv(metav.grp, paste(paste(input.folder, "post/", meta.var, "/", sep =""), 
                                           gsub(".csv", "", m$filename), "_", meta.var, "_group.csv", 
                                           sep = ""),
                       row.names = F)
@@ -306,7 +301,7 @@ compileMeta <- function(m, input.folder = NULL, fileEncoding = NULL){
                          
                          
                          # load csv in which meta group names are assigned to individual data variables
-                         metav.grp  <- read.csv(paste(paste(input.folder, meta.var, "/", sep =""), 
+                         metav.grp  <- read.csv(paste(input.folder, "post/", meta.var, "/", sep =""), 
                                                          gsub(".csv", "",m$filename), "_", 
                                                          meta.var, "_group.csv", sep = ""), 
                                                    stringsAsFactors = F)
@@ -367,12 +362,10 @@ compileMeta <- function(m, input.folder = NULL, fileEncoding = NULL){
 #' processDat()
 processDat <- function(m, input.folder = input.folder, var.omit, ...){
   
-  filename <- gsub(".csv", "", m$filename)
-  
   data <- m$data
   
   if(is.null(data)){
-    data <- read.csv(paste(input.folder, "post/", "csv/", filename, ".csv", sep = ""),  
+    data <- read.csv(paste(input.folder, "post/", "csv/", filename, sep = ""),  
                      stringsAsFactors=FALSE, na.strings = c("NA", "", " "),
                      fileEncoding = fileEncoding, 
                      na.strings = c("NA", "", " "), 
@@ -380,14 +373,13 @@ processDat <- function(m, input.folder = input.folder, var.omit, ...){
                      strip.white = T)}
   
   
-  if(anyDuplicated(data$species) > 0){warning("duplicate species name in match dat")}
+  if(anyDuplicated(data$species) > 0){warning("duplicate species name in", m$data.ID,"data")}
   
   if(any(is.na(data$species))){
     data <- data[!is.na(data$species),]}
   
   require(stringr)
   
-  data$species <- gsub(" ", "_", data$species)
   data <- data[,!names(data) %in% var.omit, drop = F]
   
   m$data <- data
