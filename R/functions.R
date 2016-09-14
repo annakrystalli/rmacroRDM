@@ -31,7 +31,7 @@ setupInputFolder <- function(input.folder,
          FUN = function(x){dir.create(paste(input.folder, x, sep =""), 
                                       showWarnings = F)})
   # create pre & post data folders 
-  lapply(X = c("pre", "post"), f = c("csv", meta.vars),
+  lapply(X = c("raw", "pre", "post"), f = c("csv", meta.vars),
          FUN = function(x, f){lapply(f, FUN = function(f, x){dir.create(paste(input.folder, x, "/", f, sep =""), 
                                                                         showWarnings = F)}, x = x)})
   # migrate folder function
