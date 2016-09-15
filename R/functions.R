@@ -219,7 +219,43 @@ code2FullRef <- function(ref.codes, ref.table){
   return(ref.codes)
 }
 
+
 #############################################
+
+
+
+#' Check meta.df species against data.
+#'
+#'Check species in a meta.df match data species. Re-order and trim meta.df if necessary
+#' @param meta.df meta.var data.frame
+#' @param data data data.frame
+#' @param meta.var character string indicating meta.var
+#'
+#' @return a data.frame with nrow = nrow(data) and with rows in same species order as data data.frame
+#' @export
+#'
+#' @examples
+checkMetaSpecies <- function(meta.df, data, meta.var){
+  
+  # check
+  if(any(!data$species %in% meta.df$species)){
+    if(meta.var == "ref"){
+      stop("no match in ", meta.var,  " for species in data:",
+           data$species[!data$species %in% meta.df$species])}else{
+             warning("no match in ", meta.var,  " for species in data:",
+                     data$species[!data$species %in% meta.df$species])}}
+  
+  # reorder
+  new.meta.df <- data.frame(matrix(NA, nrow(data), ncol(meta.df)))
+  d_in_m <- !is.na(match(data$species, meta.df$species))
+  new.meta.df[d_in_m,] <- meta.df[na.omit(match(data$species, meta.df$species)),]
+  names(new.meta.df) <- names(meta.df)
+  
+  return(new.meta.df)
+  
+}  
+
+
 
 #' Compile metadata
 #' 
@@ -240,113 +276,120 @@ code2FullRef <- function(ref.codes, ref.table){
 #' @examples
 #' compileMeta()
 #' 
-compileMeta <- function(m, input.folder = NULL, fileEncoding = ""){
+compileMeta <- function(m, input.folder = NULL, fileEncoding = "", all.override = F){
   
   meta <- m$meta
   data <- m$data
   
   for(meta.var in names(meta)){
-  
-    metav.dd <- meta[[meta.var]]
     
-    # IF NULL, CHECK FOR & LOAD AVAILABLE METADATA
-    # 1. if meta.var in meta NULL, check whether there is a corresponding meta.var file and assign
-    # to metav.dd
-    
-    if(is.null(metav.dd)){
-      if(is.null(m$filename)){}else{
-        if(!m$filename %in% list.files(paste(input.folder, "post/", meta.var, "/", sep =""))){}else{
-          
-
-          metav.dd <- read.csv(paste(input.folder, "post/", meta.var, "/", m$filename,sep = ""), 
-                               stringsAsFactors = F, fileEncoding = fileEncoding)
-
-        }}}
-
-  # Process available metadata and add to meta
-  if(!is.null(metav.dd)){
+    print("============================================================================")
+    print(paste("processing meta.var:", meta.var))
+    meta.df <- meta[[meta.var]]
     
     # expand single value to `all` column
-    if(length(metav.dd) == 1){meta[[meta.var]] <- data.frame(species = data$species, all = metav.dd)}else{
-      
-      # trim to single column for `all`
-      if("all" %in% names(metav.dd)){meta[[meta.var]] <- metav.dd[,c("species", "all")]}else{
-        
-        # MATCHING METADATA COLUMNS TO DATA COLUMNS
-        # vector of data vars to check for metadata
-        check.vars <- names(data)[!(names(data) %in% "species")]
-        
-        # if there are metadata for all data variables, return check.vars metadata
-        if(all(check.vars %in% names(metav.dd))){meta[[meta.var]] <- metav.dd[,c("species", check.vars)]}else{
-          
-          # if not all data vars have metadata matches, it is likely that metadata variables contain data from multiple 
-          # data columns. Information should be provided in a meta.var group look up table. check whether it exists.
-          if(length(grep(paste("_", meta.var, "_group", sep = ""), 
-                         grep(gsub(".csv", "",m$filename), 
-                              list.files(paste(input.folder, "post/",meta.var, "/", sep ="")), 
-                              value = T)
-                         )
-                    ) == 0){
-            
-            # if group look up table does not exist, create csv in which individual data variables can be assigned 
-            # to meta group names. If data variable has no metadata, leave as NA in group .
-            metav.grp <- data.frame(var = check.vars, grp = "")
-            metav.grp$metav.grp[metav.grp$var %in% names(metav.dd)] <- metav.grp$var[metav.grp$var %in% names(metav.dd)]
-            write.csv(metav.grp, paste(paste(input.folder, "post/", meta.var, "/", sep =""), 
-                                          gsub(".csv", "", m$filename), "_", meta.var, "_group.csv", 
-                                          sep = ""),
-                      row.names = F)
-            stop(paste(meta.var,".group file created, ","update _",meta.var,
-                       ".group file to proceed", sep = ""))}else{
-                         
-                         
-                         # load csv in which meta group names are assigned to individual data variables
-                         metav.grp  <- read.csv(paste(input.folder, "post/", meta.var, "/", sep =""), 
-                                                         gsub(".csv", "",m$filename), "_", 
-                                                         meta.var, "_group.csv", sep = ""), 
-                                                   stringsAsFactors = F)
-                         # Check that all variables are assigned to valid meta data column or NA in the case 
-                         # of no data. Stop if not.
-                         if(!all(na.omit(metav.grp$grp) %in% names(metav.dd))){
-                           stop(paste("assigned meta group names does not match supplied meta data names, update _",
-                                      meta.var,".group file to proceed", sep = ""))}else{
-                                        
-                                        # Make sure ALL variables have reference data
-                                        if(meta.var == "ref" & any(is.na(metav.grp$grp))){
-                                          stop(paste("variables missing reference column. update ", 
-                                                     meta.var,".group file to proceed", sep = ""))
-                                        }
-                                        
-                                        # Isolate variables to be assigned meta data. Create new dataframe containing the 
-                                        # appropriate meta column for each variable. 
-                                        # Name with data variables and update appropriate meta slot
-                                        check.vars <- metav.grp$var[which(!is.na(metav.grp$grp))]
-                                        dd <- data.frame(species = data$species, matrix(NA, nrow = dim(data)[1], 
-                                                                                                   ncol = length(check.vars)))
-                                        names(dd) <- c("species", check.vars)
-                                        dd[,check.vars] <- metav.dd[match(dd$species, metav.dd$species),
-                                                                                metav.grp$grp[match(check.vars, 
-                                                                                                       metav.grp$var)]]
-                                        print(paste(meta.var, "vars matched successfully to _meta.var_group"))
-                                        meta[[meta.var]] <- dd
-                                        }}}
-        
-        
-        
-      }}}
+    if(is.vector(meta.df)){
+      if(length(meta.df) > 1){
+        warning(meta.var, " argument supplied as vector has length > 1. Only first element used")
+        meta.df <- meta.df[1]}
+      meta.df <- data.frame(species = data$species, all = meta.df)}
     
-    if(is.null(meta[[meta.var]])){
-      if(meta.var == "ref"){stop("Processing stopped: no reference information")}else{
-        print(paste("Warning: NULL data for meta.var:", meta.var))
-      }
+    if(is.data.frame(meta.df)){
+      meta.df <- checkMetaSpecies(meta.df, data, meta.var)
+    }
+    
+    
+    if(m$filename %in% list.files(paste(input.folder, "post/", meta.var, "/", sep =""))){
+      print(paste("loading ", "'", meta.var, "/", m$filename, "'", sep = ""))
+      
+      load.df <- read.csv(paste(input.folder, "post/", meta.var, "/", m$filename,sep = ""), 
+                          stringsAsFactors = F, fileEncoding = fileEncoding) %>%
+        checkMetaSpecies(data, meta.var)
+      
+      if(is.null(meta.df)){meta.df <- load.df}else{cbind(meta.df <- meta.df, load.df)}}
+    
+    if(!is.null(meta.df)){
+    # trim to single column for `all` if all.override = T
+    if(all.override & "all" %in% names(meta.df)){
+      meta[[meta.var]] <- meta.df[,c("species", "all")]}
+    
+    if(any(duplicated(names(meta.df)))){
+      stop("duplicated trait columns supplied to meta.var: ", meta.var)}     
+    
+    # MATCHING METADATA COLUMNS TO DATA COLUMNS
+    # vector of data vars to check for metadata
+    check.vars <- names(data)[!(names(data) %in% "species")]
+    
+    # if there are metadata for all data variables, return check.vars metadata
+    if(all(check.vars %in% names(meta.df))){
+      meta[[meta.var]] <- meta.df[,c("species", check.vars)]}else{
+        
+        # if not all data vars have metadata matches, it is likely that meta.df 
+        # columns contain data associated w/ multiple data columns. Information should 
+        # be provided in a meta.var group look up table. check whether it exists.
+        if(file.exists(paste(input.folder, "post/", meta.var, "/", 
+                             gsub(".csv", "",m$filename), "_", meta.var, "_group", ".csv",
+                             sep =""))){
+          # load csv in which meta group names are assigned to individual data variables
+          meta.grp.df  <- read.csv(paste(input.folder, "post/", meta.var, "/", 
+                                         gsub(".csv", "",m$filename), "_", 
+                                         meta.var, "_group.csv", sep = ""), 
+                                   stringsAsFactors = F)
+        }else{
+          # if group look up table does not exist, create csv in which individual 
+          # data variables can be assigned to meta group names. If data variable 
+          # has no metadata, leave as NA in group.
+          meta.grp.df <- data.frame(var = check.vars, grp = "")
+          meta.grp.df$meta.grp.df[meta.grp.df$var %in% names(meta.df)] <- meta.grp.df$var[meta.grp.df$var %in% names(meta.df)]
+          write.csv(meta.grp.df, paste(input.folder, "post/", meta.var, "/",
+                                       gsub(".csv", "", m$filename), "_", meta.var, "_group.csv", 
+                                       sep = ""),
+                    row.names = F)
+          stop(paste(meta.var,".group.csv created, in post/",
+                     meta.var," folder. Update file to proceed", 
+                     sep = ""))}
+        
+        # Check that all variables are assigned to valid meta data column or NA in the case 
+        # of no data. Stop if not.
+        if(!all(na.omit(meta.grp.df$grp) %in% names(meta.df))){
+          stop(paste("assigned meta group names does not match supplied meta data names, update _",
+                     meta.var,".group file to proceed", sep = ""))}
+        
+        
+        # Make sure ALL variables have reference data
+        if(meta.var == "ref" & any(is.na(meta.grp.df$grp))){
+          stop(paste("variables missing reference column. update ", 
+                     meta.var,".group file to proceed", sep = ""))
+        }
+        
+        # Isolate variables to be assigned meta data. Create new dataframe containing the 
+        # appropriate meta column for each variable. 
+        # Name with data variables and update appropriate meta slot
+        check.vars <- meta.grp.df$var[which(!is.na(meta.grp.df$grp))]
+        dd <- data.frame(species = data$species, matrix(NA, nrow = dim(data)[1], 
+                                                        ncol = length(check.vars)))
+        names(dd) <- c("species", check.vars)
+        dd[,check.vars] <- meta.df[match(dd$species, meta.df$species),
+                                   meta.grp.df$grp[match(check.vars, 
+                                                         meta.grp.df$var)]]
+        print(paste(meta.var, " vars matched successfully to ", "post/", 
+                    meta.var, "/", gsub(".csv", "",m$filename), "_", 
+                          meta.var, "_group.csv", sep = ""))
+        meta[[meta.var]] <- dd
+      }}
+    
+  if(is.null(meta[[meta.var]])){
+    if(meta.var == "ref"){stop("Processing stopped: no reference information")}else{
+      print(paste("Warning: NULL data for meta.var:", meta.var))
     }
   }
-  
-  m$data <- data
-  m$meta <- meta
-  return(m)
-  }
-  
+}
+
+m$data <- data
+m$meta <- meta
+return(m)
+}
+
 
 #' Load and clean data.
 #' 
