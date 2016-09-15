@@ -109,13 +109,6 @@ path_to_dcode <- function(path, fcodes, file.names) {
         gsub("x", "", names(file.names)[s.path[2] == file.names]), sep = "")
 }
 
-file.names <- ens_file.names(c("brainmain2.csv", "Amniote_Database_Aug_2015.csv", "anagedatasetf.csv",            
-                 "lifehistraits.csv", "parentalcare.csv"))
-data.log <- create_data.log(file.names = file.names, overwrite = T)
-
-check_vnames(file.names = NULL, vnames.path = NULL,
-                            input.folder = input.folder, fcodes = fcodes)
-
 #' Create named file.names vector
 #'
 #' @param file.names 
