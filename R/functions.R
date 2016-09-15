@@ -1,7 +1,7 @@
 
 #' Setup inputs folder.
 #' 
-#' Sets up input folder with correct folder structure
+#' Sets up file.system with correct folder structure
 #' @param input.folder file path to input data folder.
 #' @param meta.vars vector containing names of meta.vars. Defaults to c("qc", "observer", "ref", "n", 
 #' "notes")
@@ -63,9 +63,268 @@ setupInputFolder <- function(input.folder,
   }
 }
 
+fcodes <- ensure_fcodes(meta.vars)
+
+#' Ensure ncodes
+#'
+#' Generate a valid named vector of fs folders. Names represent fcodes (folder codes), used 
+#' to effect data processing across file.system.
+#' @param meta.vars caharacter vector of meta.var names
+#'
+#' @return
+#' @export
+#'
+#' @examples
+ensure_fcodes <- function(meta.vars){
+  
+  reserved <- c("csv", "ref", "n")
+  i <- 1
+  f <- c("csv", meta.vars)
+  
+  if(any(!reserved %in% f)){stop(reserved[!reserved %in% f], "missing from meta.vars")}
+  
+  names(f) <- substr(f, 1, i)
+  names(f)[f == "csv"] <- "d"
+  f <- c(f[f %in% reserved],f[!f %in% reserved])
+  while(any(duplicated(names(f)))){
+        names(f)[duplicated(names(f))] <- substr(f[duplicated(names(f))], 1, i + 1)
+  }
+  names(f) <- toupper(names(f))
+  return(f)
+}
+
+#' Title
+#'
+#' @param path path from 'input.folder/pre/' to file.
+#' @param fcodes 
+#' @param file.names 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+path_to_dcode <- function(path, fcodes, file.names) {
+  s.path <- unlist(strsplit(path, "/"))
+  paste(names(fcodes)[s.path[1] == fcodes], 
+        gsub("x", "", names(file.names)[s.path[2] == file.names]), sep = "")
+}
+
+file.names <- ens_file.names(c("brainmain2.csv", "Amniote_Database_Aug_2015.csv", "anagedatasetf.csv",            
+                 "lifehistraits.csv", "parentalcare.csv"))
+data.log <- create_data.log(file.names = file.names, overwrite = T)
+
+check_vnames(file.names = NULL, vnames.path = NULL,
+                            input.folder = input.folder, fcodes = fcodes)
+
+#' Create named file.names vector
+#'
+#' @param file.names 
+#' @param trim.to.existing 
+#' @param from.data.log 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+create_file.names <- function(file.names = NULL, trim.to.existing = F, 
+                           from.data.log = F) {
+  fs <- list.files(paste(input.folder, "pre/csv", sep = ""), recursive = T) %>%
+    grep(pattern = "Icon\r", inv=T, value=T)
+  
+  if(from.data.log){
+    if(!file.exists(paste(input.folder, "metadata/data_log.csv", sep = ""))){
+      stop(paste(input.folder, "metadata/data_log.csv", " does not exist", sep = ""))
+    }else{data.log <- read.csv(paste(input.folder, "metadata/data_log.csv", sep = ""),
+                               stringsAsFactors = F, strip.white = T, 
+                               na.strings = c("NA", "-999", "", " "), 
+                               blank.lines.skip = TRUE)
+    file.names.dl <- setNames(data.log[, "file.name"], gsub("D", "x", data.log[,"dcode"]))
+      if(!is.null(file.names)){
+        file.names <- file.names.dl[file.names.dl$file.name %in% file.names]}else{
+          file.names <- file.names.dl
+        }}
+    return(file.names)
+  }
+  if(is.null(file.names)){stop("no file.name information supplied")}
+  setNames(file.names, paste("x", 0:(length(file.names)-1), sep = ""))
+  return(file.names)
+}
+
+#' Create data_log.csv
+#'
+#' Creates a data.frame and writes it to data.log.path
+#' @param fcodes vector of file.system folder names. named with fcodes
+#' @param file.names vector of file.names to include in data.log. If unnamed, 
+#' file.names are coded alphabetically. Otherwise should be named generic with the 
+#' dcode to be associated with each file.name.
+#' @param overwrite whether to overwrite any existing file specified by data.log.path
+#' @param data.log.path path to write data_log.csv to. defaults to path: 
+#' 'metadata/data.log.csv' in the file.system
+#'
+#' @return a data.log data.frame
+#' @export
+#'
+#' @examples
+create_data.log <- function(fcodes = fcodes, file.names, overwrite = F,
+                            data.log.path = NULL){
+  if(is.null(data.log.path)){
+    data.log.path <- paste(input.folder, "metadata/data_log.csv", sep = "")}
+  if(!overwrite & file.exists(data.log.path)){
+    stop("data_log.csv already exists. Use overwrite = T to overwrite")}
+  
+  dl.names <- c("dcode", "file.name", "descr", "source", "source.contact", "method", "notes")
+  fs <- list.files(paste(input.folder, "pre/csv/", sep = ""), recursive = T) %>%
+    grep(pattern = "Icon\r", inv=T, value=T)
+  
+  if(length(file.names) == 1){
+    if(file.names == "blank"){
+      data.log <- setNames(data.frame(matrix(nrow = 0, ncol = length(dl.names))), dl.names) 
+      write.csv(data.log, file = data.log.path,
+                row.names = F)
+      cat(paste("blank data.log written to: \n'", data.log.path, "'\n", "Complete to continue",
+                sep = ""))
+      return(NULL)
+    }
+    
+    if(file.names == "fromFS"){
+      file.names <- fs %>% setNames(paste("D", 0:(length(fs)-1), sep = ""))
+      data.log <- data.frame(matrix("", nrow = length(file.names), ncol = length(dl.names))) %>%
+        setNames(dl.names)
+      data.log[,"dcode"] <- names(file.names)
+      data.log[,"file.name"] <- file.names
+      write.csv(data.log, file = paste(input.folder, "metadata/data_log.csv", sep = ""),
+                row.names = F)
+      return(data.log)
+    }
+  }
+  
+  if(!is.vector(file.names)){stop("non vector argument supplied to 'file.names' where character vector expected")}
+  
+  if(any(!file.names %in% fs)){stop("file.names: ", file.names[!file.names %in% fs],
+                                    ", not valid file.name in 'csv/' folder")}
+  if(is.null(names(file.names))){
+    file.names <- setNames(file.name, paste("D", 0:(length(fs)-1), sep = ""))}
+  
+  data.log <- data.frame(matrix("", nrow = length(file.names), ncol = length(dl.names))) %>%
+    setNames(dl.names)
+  data.log[,"dcode"] <- gsub("x", "D", names(file.names))
+  data.log[,"file.name"] <- file.names
+  data.log <- data.log[order(data.log$dcode),]
+  write.csv(data.log, file = paste(input.folder, "metadata/data_log.csv", sep = ""),
+            row.names = F)
+  return(data.log)
+}
+
+#' Create vnames.csv
+#'
+#' @param file.names a vector of file.names for which columns should be created in 
+#' vnames.csv. If NULL, function attempts to extract file.names from data.log.
+#' @param data.log a data.log data.frame
+#' @param input.folder project input.folder path. Defaults to input.folder in 
+#' global environment
+#' @param fcodes 
+#' @param overwrite overwrite whether to overwrite any existing file specified 
+#' by vnames.path
+#' @param vnames.path 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+create_vnames <- function(file.names = NULL, data.log = NULL, input.folder = input.folder, 
+                          fcodes = fcodes, overwrite = F, vnames.path = NULL) {
+  if(is.null(vnames.path)){vnames.path <- paste(input.folder, "metadata/vnames.csv", 
+                                                sep = "")}
+  if(file.exists(vnames.path) & !overwrite){
+    stop("vnames.csv already exists. Use overwrite = T to overwrite")
+  }
+  
+  if(is.null(file.names)){print("no files.names provided. Checking for data.log")
+    if(is.null(data.log)){
+      if(file.exists(paste(input.folder, "metadata/data_log.csv", sep = ""))){
+        print("extracting file.names from data.log")
+        file.names <- ens_file.names(file.names = NULL, trim.to.existing = F, 
+                 from.data.log = T)  
+      }else{stop("no data.log supplied")}}}
+  
+  if(is.null(names(file.names))){
+    stop("file.names not named. Vector of file.names named with generic dcodes required")}
+  
+  fs <- list.files(paste(input.folder, "pre", sep = ""), recursive = T) %>%
+    grep(pattern = "Icon\r", inv=T, value=T)
+  dcodes <- sapply(fs, FUN = path_to_dcode, fcodes, file.names)
+  
+    vnames <- data.frame(matrix(nrow = 0, ncol = length(dcodes))) %>% setNames(dcodes)
+    vnames <- vnames[,order(names(vnames))]
+    print(paste("writing vnames.cvs to path:",  "'",vnames.path,"'", sep = ""))
+    write.csv(vnames, vnames.path, row.names = T, na = "")
+
+  }
+  
 
 
-longMasterFormat <- function(data, master.vars, data.ID){
+#' Check vnames against file.names
+#'
+#' @param file.names 
+#' @param vnames.path 
+#' @param input.folder 
+#' @param fcodes 
+#' @param data.log 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+check_vnames <- function(file.names = file.names, vnames.path = NULL,
+                         input.folder = input.folder, fcodes = fcodes, data.log = NULL) {
+  
+  if(is.null(vnames.path)){vnames.path <- paste(input.folder, "metadata/vnames.csv", sep = "")}
+  
+  if(is.null(file.names)){print("no files.names provided. Checking for data.log")
+    if(is.null(data.log)){
+      if(file.exists(paste(input.folder, "metadata/data_log.csv", sep = ""))){
+        print("extracting file.names from data.log")
+        file.names <- ens_file.names(file.names = NULL, trim.to.existing = F, 
+                                     from.data.log = T)  
+      }else{stop("no data.log supplied. Can't get dcode info")}}}
+  
+  if(is.null(names(file.names))){
+    stop("file.names vector not named. Vector of file.names named with generic dcodes required")}
+  
+  fs <- list.files(paste(input.folder, "pre", sep = ""), recursive = T) %>%
+    grep(pattern = "Icon\r", inv=T, value=T)
+  dcodes <- sapply(fs, FUN = path_to_dcode, fcodes, file.names)
+  
+  if(!file.exists(vnames.path)){stop("path to vnames.csv not valid")}
+  vnames <- read.csv(vnames.path, strip.white = T,
+           stringsAsFactors = T, na.strings = c("NA", "", " "))
+
+  
+  if(all(dcodes %in% names(vnames))){
+    print("all files in file system have valid vnames columns")}else{
+      stop("no valid 'vnames.csv' columns for files:","\n ", paste(dcodes[dcodes %in% names(vnames)],
+                            names(dcodes)[dcodes %in% names(vnames)], 
+                            sep = ":", collapse = "\n "))
+    }
+  }
+  
+  
+
+
+
+#' Convert long data.frame to master format
+#'
+#' Function accepts long dataset, checks columns and reorders into master format 
+#' @param data long data.frame
+#' @param master.vars 
+#' @param data.ID 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+longtoMasterFormat <- function(data, master.vars, 
+                               data.ID = names(file.names)[file.names == file.name]){
   
   df <- newMasterData(master.vars, nrow = dim(data)[1])
   
@@ -511,8 +770,20 @@ spp2taxoMatch <- function(spp, parent.spp, taxo.table){
   return(dat)
 }
 
-# Compiles dataset into format compatible with appending to master database. Takes 
-# match object m.
+
+#' Compile to master database long format
+#' 
+#' Compiles dataset into format compatible with appending to master database. 
+#' Takes match object m.
+#' @param m 
+#' @param meta.vars 
+#' @param match.vars 
+#' @param var.vars 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 masterDataFormat <-  function(m, meta.vars, match.vars, var.vars){
   
   master.vars <- c("species", match.vars, var.vars, meta.vars)
