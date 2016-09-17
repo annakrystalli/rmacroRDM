@@ -1,5 +1,9 @@
+pkgs <- c("dplyr", "taxize")
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(pkgs, character.only = T)
 
-#' Setup inputs folder.
+
+#' Setup file.system.
 #' 
 #' Sets up file.system with correct folder structure
 #' @param input.folder file path to input data folder.
@@ -16,9 +20,23 @@
 #' @examples
 #' setupInputFolder()
 
-setupInputFolder <- function(input.folder, 
-                             meta.vars = c("qc", "observer", "ref", "n", "notes"),
+setupFileSystem <- function(script.folder = getwd(), data.folder,
                              migrate = F, ...){
+  
+  dir.create(paste(data.folder, "inputs", sep = ""), showWarnings = F)
+  dir.create(paste(data.folder, "outputs", sep = ""), showWarnings = F)
+  dir.create(paste(data.folder, "info", sep = ""), showWarnings = F)
+  dir.create(paste(data.folder, "inputs/data", sep = ""), showWarnings = F)
+  
+  dir.create(paste(script.folder, "process", sep = ""), showWarnings = F)
+  
+  assign("script.folder", script.folder, 
+         envir = globalenv())
+  assign("input.folder", paste(data.folder, "inputs/data/", sep = ""), 
+         envir = globalenv())
+  assign("output.folder", paste(data.folder, "outputs/", sep = ""), 
+         envir = globalenv())
+  
   
   if(!file.exists(input.folder)){stop("invalid input.folder path")}
   
@@ -61,10 +79,47 @@ setupInputFolder <- function(input.folder,
     f = c("csv", meta.vars)
     lapply(f, migrate_folder, remove.f = F)
   }
+  
+  dir.create(paste(output.folder, "data", sep = ""), showWarnings = F)
+  dir.create(paste(output.folder, "reports", sep = ""), showWarnings = F)
+  dir.create(paste(output.folder, "figures", sep = ""), showWarnings = F)
+  
+  
 }
 
-fcodes <- ensure_fcodes(meta.vars)
 
+#' Initialise database
+#'
+#' @param var.vars 
+#' @param match.vars 
+#' @param meta.vars 
+#' @param taxo.vars 
+#' @param spp.list_src 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+init_db <- function(var.vars = c("var", "value", "data.ID"),
+                    match.vars = c("synonyms", "data.status"),
+                    meta.vars = c("qc", "observer", "ref", "n", "notes"),
+                    taxo.vars = c("genus", "family", "order"),
+                    spp.list_src = "D0") {
+  
+  master.vars <- c("species", match.vars, var.vars, meta.vars)
+  
+  print(sys.call(which = 0))
+  print(sys.frame(which = 1))
+  
+  cat("configuring: ", ls(), sep = "\n")
+  master_config = setNames(lapply(ls(), get, envir = sys.frame(1)), 
+                           ls()[!ls() %in% "master_config"])
+  while("master_config" %in% search()){
+    detach(master_config)
+  }
+  attach(master_config, 2)
+  return()
+}
 #' Ensure ncodes
 #'
 #' Generate a valid named vector of fs folders. Names represent fcodes (folder codes), used 
@@ -133,13 +188,13 @@ create_file.names <- function(file.names = NULL, trim.to.existing = F,
                                blank.lines.skip = TRUE)
     file.names.dl <- setNames(data.log[, "file.name"], gsub("D", "x", data.log[,"dcode"]))
       if(!is.null(file.names)){
-        file.names <- file.names.dl[file.names.dl$file.name %in% file.names]}else{
+        file.names <- file.names.dl[file.names.dl %in% file.names]}else{
           file.names <- file.names.dl
         }}
     return(file.names)
   }
   if(is.null(file.names)){stop("no file.name information supplied")}
-  setNames(file.names, paste("x", 0:(length(file.names)-1), sep = ""))
+  file.names <- setNames(file.names, paste("x", 0:(length(file.names)-1), sep = ""))
   return(file.names)
 }
 
@@ -163,7 +218,9 @@ create_data.log <- function(fcodes = fcodes, file.names, overwrite = F,
   if(is.null(data.log.path)){
     data.log.path <- paste(input.folder, "metadata/data_log.csv", sep = "")}
   if(!overwrite & file.exists(data.log.path)){
-    stop("data_log.csv already exists. Use overwrite = T to overwrite")}
+    warning("data_log.csv already exists. Use overwrite = T to overwrite \n existing loaded")
+    return(read.csv(file = paste(input.folder, "metadata/data_log.csv", sep = "")))
+    }
   
   dl.names <- c("dcode", "file.name", "descr", "source", "source.contact", "method", "notes")
   fs <- list.files(paste(input.folder, "pre/csv/", sep = ""), recursive = T) %>%
@@ -224,7 +281,7 @@ create_data.log <- function(fcodes = fcodes, file.names, overwrite = F,
 #' @export
 #'
 #' @examples
-create_vnames <- function(file.names = NULL, data.log = NULL, input.folder = input.folder, 
+create_vnames <- function(file.names = NULL, data.log = NULL,  
                           fcodes = fcodes, overwrite = F, vnames.path = NULL) {
   if(is.null(vnames.path)){vnames.path <- paste(input.folder, "metadata/vnames.csv", 
                                                 sep = "")}
@@ -236,8 +293,8 @@ create_vnames <- function(file.names = NULL, data.log = NULL, input.folder = inp
     if(is.null(data.log)){
       if(file.exists(paste(input.folder, "metadata/data_log.csv", sep = ""))){
         print("extracting file.names from data.log")
-        file.names <- ens_file.names(file.names = NULL, trim.to.existing = F, 
-                 from.data.log = T)  
+        file.names <- create_file.names(file.names = NULL, trim.to.existing = F, 
+                 from.data.log = T, input.folder = input.folder)  
       }else{stop("no data.log supplied")}}}
   
   if(is.null(names(file.names))){
@@ -269,7 +326,7 @@ create_vnames <- function(file.names = NULL, data.log = NULL, input.folder = inp
 #'
 #' @examples
 check_vnames <- function(file.names = file.names, vnames.path = NULL,
-                         input.folder = input.folder, fcodes = fcodes, data.log = NULL) {
+                          fcodes = fcodes, data.log = NULL) {
   
   if(is.null(vnames.path)){vnames.path <- paste(input.folder, "metadata/vnames.csv", sep = "")}
   
@@ -277,16 +334,21 @@ check_vnames <- function(file.names = file.names, vnames.path = NULL,
     if(is.null(data.log)){
       if(file.exists(paste(input.folder, "metadata/data_log.csv", sep = ""))){
         print("extracting file.names from data.log")
-        file.names <- ens_file.names(file.names = NULL, trim.to.existing = F, 
-                                     from.data.log = T)  
+        file.names <- create_file.names(file.names = NULL, trim.to.existing = F, 
+                                     from.data.log = T , input.folder = input.folder)  
       }else{stop("no data.log supplied. Can't get dcode info")}}}
   
   if(is.null(names(file.names))){
     stop("file.names vector not named. Vector of file.names named with generic dcodes required")}
   
   fs <- list.files(paste(input.folder, "pre", sep = ""), recursive = T) %>%
-    grep(pattern = "Icon\r", inv=T, value=T)
+    grep(pattern = "Icon\r", inv=T, value=T) 
+
+  fs <- unique(grep(paste(file.names,collapse="|"), 
+                          fs, value=TRUE))
+  
   dcodes <- sapply(fs, FUN = path_to_dcode, fcodes, file.names)
+
   
   if(!file.exists(vnames.path)){stop("path to vnames.csv not valid")}
   vnames <- read.csv(vnames.path, strip.white = T,
@@ -303,11 +365,125 @@ check_vnames <- function(file.names = file.names, vnames.path = NULL,
   
   
 
+#' Title
+#'
+#' @param file.name 
+#' @param file.name.out 
+#' @param na.strings 
+#' @param fileEncoding 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+process_csv <- function(file.name, file.name.out = file.name, 
+                        file.names = file.names, fcode = fcodes["D"], 
+                        na.strings = c("NA", "", " ", "-999"), 
+                        fileEncoding = "", ...) {
+  
+  vname.col <- gsub("x", names(fcode), names(file.names)[file.names == file.name])
+  print("===================================================================")
+  print(paste("processing", file.name, vname.col))
+  
+  data<- read.csv(paste("pre/", fcodes[fcodes == fcode],"/", file.name, sep = ""), 
+                  header = T, strip.white = T, stringsAsFactors = F,
+                  na.strings = na.strings, blank.lines.skip = TRUE,
+                  fileEncoding = fileEncoding)
+  
+  if(exists(var.omit)){
+  data <- data[,!names(data) %in% var.omit, drop = F]}
+  
+  if(anyDuplicated(data$species) > 0){
+    warning("duplicate species name in",  vname.col, "data")}
+  
+  if(any(is.na(data$species))){
+    data <- data[!is.na(data$species),]
+    warning("NAs detected in species column, data set: ", vname.col,". \n Rows removed")}
+  
+  if(file.exists(paste(script.folder, "process/", gsub(".csv", "", file.name), 
+                       ".R", sep = ""))){
+    source(paste(script.folder, "process/", gsub(".csv", "", file.name), 
+                 ".R", sep = ""), local = T)
+    print(paste("sourced: process/", gsub(".csv", "", file.name), 
+                ".R", sep = ""))}
+  
+  if(file.exists(paste(script.folder, "process/", gsub(".csv", "", file.name), "_",
+                       fcode, ".R", sep = ""))){
+    source(paste(script.folder, "process/", gsub(".csv", "", file.name), "_",
+                 fcode, ".R", sep = ""), local = T)
+    print(paste("sourced: process/", gsub(".csv", "", file.name), "_",
+                fcode,".R", sep = ""))}
+  
+  #This is for the brain size database that has problems with variable names
+  vnames[, vname.col] <- gsub(" ", ".", vnames[, vname.col])
+  vnames[, vname.col] <- gsub("\\(", ".", vnames[, vname.col])
+  vnames[, vname.col] <- gsub("\\)", ".", vnames[, vname.col])
+  
+  
+  #For brain size
+  keep.vars <- na.omit(vnames[, vname.col])
+  if(!all(keep.vars %in% names(data))){
+    stop(paste("no column match in .csv for", vname.col, "vnames:", 
+               keep.vars[which(!keep.vars %in% names(data))]))
+  }
+  
+  data<- data[,keep.vars]
+  
+  names(data) <- vnames$Code[match(names(data), vnames[, vname.col])]
+  
+  if("genus" %in% names(data)){
+    data$species <- paste(data$genus, "_", data$species, sep = "")
+    data <- data[, names(data) != "genus"]
+    print("'genus_species' combined in species column. Genus data removed")
+  }
+  
+  print(paste("df", c("nrow (species)", "ncol (traits)"),":", dim(data)))
+  
+  write.csv(data, paste("post/", fcodes[fcodes == fcode], "/", file.name, sep = ""),
+            row.names = F)
+  print("***")
+  
+}
+
+
+#' Process files in the file.system
+#'
+#' @param file.names can be "fromFS" to extract file.names from contents of folder "pre/" 
+#' or a vector of file.names named with dcode (both generic and specific handled).
+#' @param fcodes character vector of file.system folder names. Named with appropriate fcode.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+process_file.system <- function(file.names, fcodes) {
+  
+  check_vnames(file.names = file.names, vnames.path = NULL,
+               fcodes = fcodes)
+  
+  if(length(file.names) == 1 & all(file.names == "fromFS")){
+    file.names <- create_file.names(from.data.log = T)
+  }
+  
+  process.l <- lapply(fcodes, FUN = function(x) {
+    f.files <- list.files(paste(input.folder, "pre/", x, sep = "")) %>% 
+      grep(pattern = "Icon\r", invert = T, value = T)
+    f.files <- f.files[f.files %in% file.names]}) 
+  process.l <-process.l[sapply(process.l, FUN = function(x) {length(x) != 0})]
+  
+  for(fcode in names(process.l)){
+    for(file.name in process.l[[fcode]]){
+      process_csv(file.name, file.names = file.names, fcode = fcodes[fcode], 
+                  fileEncoding = "mac", file.name.out = file.name, vnames = vnames) 
+    }
+  }
+}
 
 
 #' Convert long data.frame to master format
 #'
-#' Function accepts long dataset, checks columns and reorders into master format 
+#' Function accepts long data.frame, checks columns and converts to master format 
 #' @param data long data.frame
 #' @param master.vars 
 #' @param data.ID 
@@ -316,40 +492,111 @@ check_vnames <- function(file.names = file.names, vnames.path = NULL,
 #' @export
 #'
 #' @examples
-longtoMasterFormat <- function(data, master.vars, 
-                               data.ID = names(file.names)[file.names == file.name]){
+longtoMasterFormat <- function(data = NULL, master.vars, spp.list = NULL,
+                               file.name){
+  if(is.null(data)){
+    if(is.null(file.name)){stop("no data or file.name supplied")}
+    stopifnot(!is.null(names(file.name)))
+    df <- read.csv(paste(input.folder, "post/csv/", file.name))
+  }
   
   df <- newMasterData(master.vars, nrow = dim(data)[1])
   
-  keep <- names(data)[names(D0) %in% master.vars]
+  keep <- names(data)[names(df) %in% master.vars]
   
   df[match(keep, names(df))] <- data[,keep]
   df$synonyms <- df$species
   df$data.status <- "original"
-  df$data.ID <- data.ID
-
+  df$data.ID <- names(file.name)
+  attr(df, "format") <- "master"
+  
+  output <- list(data = df, spp.list = spp.list, file.name = file.name)
+  attr(output, "type") <- "data:master"
+  attr(output, "status") <- "unmatched"
+  
+  
   return(df)
 }
 
-# create spp.list and add taxonomic data
-createSpp.list <- function(species, taxo.dat, taxo.vars){
+#' Create [[master]]
+#'
+#' @param spp.list 
+#' @param data 
+#' @param file.name 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+create_master <- function(spp.list, data = NULL, file.name) {
   
-  if(is.null(taxo.vars)){
+  if(is.null(data)){data <- newMasterData(master.vars)
+  file.names <- NULL
+  }else{
+    if(attr(data, "format") != "master"){
+      stop("data not data.frame with attr:format == master")}
+    
+    if(!file.exists(paste(input.folder, "post/csv/", file.name, sep =""))){
+      stop("data file.name supplied returning invalid pathway: \n", 
+           paste(input.folder, "post/csv/", file.name, sep =""))}
+    
+    file.names <- file.name}
+  
+  
+  master <- list(data = newMasterData(master.vars), 
+                 spp.list = spp.list, 
+                 metadata = metadata,
+                 file.names = file.names)
+  attr(master, "type") <- "master"
+  return(master)
+}
+
+
+# create spp.list and add taxonomic data
+createSpp.list <- function(species, taxo.dat = NULL, taxon.levels = NULL, 
+                           spp.list_src = NULL){
+
+  if(!is.null(spp.list_src)){
+    if(!exists("file.names", 1)){
+      stop("dcode named file.names vector required in global environment to use spp.list_src for spp.list")}
+    
+    if(!file.exists(paste("post/csv/", file.names[gsub("D", "x", spp.list_src)], sep = ""))){
+     stop("spp.list_src: ", spp.list_src, " is returning invalid pathway: \n", 
+          paste("post/csv/", file.names[gsub("D", "x", spp.list_src)], sep = ""))}
+    
+    species <- unique(read.csv(paste("post/csv/", file.names[gsub("D", "x", spp.list_src)], sep = ""), 
+             header = T)$species)
+    cat("species list extracted from dataset: ", spp.list_src, "\n file.name: ",
+              file.names[gsub("D", "x", spp.list_src)], sep = "")
+  }
+  
+  if(is.null(species)){stop("no species supplied")
+  }
+  species <- trimws(gsub(" ", "_", species))
+  
+  if(is.null(taxo.dat)){
     spp.list <- data.frame(species = species, master.spp = T, rel.spp = NA, 
                                    taxo.status = "original")
+    attr(spp.list, "type") <- "spp.list"
     return(spp.list)}
   
+  if(!is.null(taxo.dat)){
   if(any(!species %in% taxo.dat$species)){
     print(species[!species %in% taxo.dat$species])
     stop("species data missing in taxo.dat")}
   
+    if(is.null(taxon.levels)){taxon.levels <- names(taxo.dat)}
   if(any(!taxo.vars %in% names(taxo.dat))){print(taxo.vars[!taxo.vars %in% names(taxo.dat)])
     stop("taxo.vars data missing in taxo.dat")}
   
   taxo.dat <- taxo.dat[taxo.dat$species == species, taxo.vars]
+  }
   
   spp.list <- data.frame(species = species, master.spp = T, rel.spp = NA, 
                          taxo.status = "original", taxo.dat)
+  
+  attr(spp.list, "type") <- "spp.list"
+  return(spp.list)
 }
 
 
@@ -367,6 +614,7 @@ createMeta <- function(meta.vars){
   
   meta <- vector("list", length(meta.vars))
   names(meta) <- meta.vars
+  attr(meta, "type") <- "meta"
   
   return(meta)
 }
@@ -643,44 +891,6 @@ return(m)
 }
 
 
-#' Load and clean data.
-#' 
-#' If m$data still NULL, loads data using m$filename. Cleans and performs basic checks on data. 
-#' Prepares species names and removes var.omit variables
-#' @param m match object
-#' @param input.folder path to master data input folder
-#' @param var.omit vector of character strings containing names of data variables to be ignored
-#' @keywords data
-#' @return updated match object
-#' @export
-#' @examples
-#' processDat()
-processDat <- function(m, input.folder = input.folder, var.omit, ...){
-  
-  data <- m$data
-  
-  if(is.null(data)){
-    data <- read.csv(paste(input.folder, "post/", "csv/", filename, sep = ""),  
-                     stringsAsFactors=FALSE, na.strings = c("NA", "", " "),
-                     fileEncoding = fileEncoding, 
-                     na.strings = c("NA", "", " "), 
-                     blank.lines.skip = T,
-                     strip.white = T)}
-  
-  
-  if(anyDuplicated(data$species) > 0){warning("duplicate species name in", m$data.ID,"data")}
-  
-  if(any(is.na(data$species))){
-    data <- data[!is.na(data$species),]}
-  
-  require(stringr)
-  
-  data <- data[,!names(data) %in% var.omit, drop = F]
-  
-  m$data <- data
-  
-  return(m)}
-
 #' Manually add metadata to meta list
 #' 
 #' Allows manual updating of meta list.
@@ -811,14 +1021,24 @@ masterDataFormat <-  function(m, meta.vars, match.vars, var.vars){
   for(meta.var in meta.vars){
     
     mdat[,meta.var] <- getMeta(meta.var, meta = m$meta, spp = species, var = var)}
-                    
-    
-    return(list(data = mdat, spp.list = m$spp.list))
+     
+  if(any(is.na(mdat$ref))){               
+  warning(sum(is.na(mdat$ref)), " data points missing reference information!:",
+      "\n (", format((sum(is.na(mdat$ref))/nrow(mdat))*100, digits = 2), 
+      "% of ", nrow(mdat),")", sep = "")}
+  
+  attr(mdat, "format") <- "master"
+  output <- list(data = mdat, spp.list = m$spp.list, 
+                 filename = setNames(m$filename, m$data.ID))
+  attr(output, "type") <- "data:master"
+  attr(output, "status") <- "matched"
+  
+    return(output)
 }
 
 
-updateMaster <- function(master, data, spp.list = NULL){
-  
+updateMaster <- function(master, output = NULL, data, spp.list = NULL, file.name = NULL){
+  if(!is.null(output))
   if(is.null(spp.list)){
     if(is.null(master$spp.list)){
       stop("no spp.list supplied")}else{spp.list <- master$spp.list}}
@@ -847,6 +1067,7 @@ newMasterData <- function(master.vars, nrow = NULL){
   if(is.null(nrow)){nrow <- 0}
   data <- data.frame(matrix(vector(), nrow, length(master.vars),
                       dimnames = list(c(), master.vars)))
+  attr(data, "format") <- "master"
   return(data)
 }
     
@@ -922,7 +1143,7 @@ dataSppMatch <- function(m, syn.links = syn.links,
   # Check whether matching required and match
   unmatched <- m[[sub]]$species[!(m[[sub]]$species %in% m[[set]]$species)]
   if(length(unmatched) == 0){print(paste(m$data.ID, "data direct match to spp.list, no further matching required"))
-    m$status <- "full_match"
+    attr(m, "status") <- "full_match"
     return(m)}
   
   # remove extinct or new species from data to be added
@@ -940,27 +1161,25 @@ dataSppMatch <- function(m, syn.links = syn.links,
   # if no more species unmatched break loop
   if(length(unmatched) == 0){
     print(paste(m$data.ID, "match complete"))
-    m$status <- "full_match"
+    attr(m, "status") <- "full_match"
     # Trim data
     m$data <- m$data[m$data$species %in% m$spp.list$species,]
   }else{
-    
-    print(paste("match incomplete,",length(unmatched), sub, "datapoints unmatched"))
-    m$status <- paste("incomplete_match:", length(unmatched)) 
+    warning(paste("match incomplete,",length(unmatched), sub, "datapoints unmatched"))
+    attr(m, "status") <- paste("matched:incomplete - ", length(unmatched), m$sub,
+                               " unmatched", sep = "")
     m$unmatched <- data.frame(species = unmatched, synonyms = NA)
     
     if(ignore.unmatched){
       # Trim data
       m$data <- m$data[m$data$species %in% m$spp.list$species,]
     }else{
-      print(paste("manual match required to continue"))
-      m$status <- paste(m$status, "- untrimmed")  
+      stop(paste("manual match required to continue"))
     }
-    
   }
   
 
-  
+  attr(m$data, "format") <- "data:wide"
   return(m)}
 
 
@@ -991,7 +1210,7 @@ dataMatchPrep <- function(m){
   
   data <- m$data
   
-  if("data.status" %in% names(data)){
+  if("data.cre" %in% names(data)){
     print("Data already prep-ed")
     return(data)
   }else{
@@ -1007,9 +1226,22 @@ dataMatchPrep <- function(m){
 
 
 # Create match object
-matchObj <- function(data.ID, spp.list, data, status = "unmatched", 
-                     sub, meta = meta, filename = NULL, unmatched = NULL){
+matchObj <- function(data.ID = NULL, spp.list, data = NULL,  
+                     sub, meta, file.name = NULL, unmatched = NULL, fileEncoding = ""){
   
+  if(is.null(filename)){stop("required argument filename not supplied")}
+  
+  if(!file.exists(paste(input.folder, "post/csv/", filename, sep = ""))){
+    stop("file.name specifying invalid path: \n \"", 
+         paste(input.folder, "post/csv/", filename, sep = ""),
+         "\"")}
+  
+  if(is.null(data.ID)) {
+    data.ID <- gsub("x", "D", names(file.names)[file.names == filename])}
+  
+  if(is.null(data)) {
+   data <-  read.csv(paste(input.folder, "post/csv/", filename, sep = ""),
+             stringsAsFactors=FALSE, fileEncoding = fileEncoding)}
   
   if(sub == "spp.list"){
     set <- "data"
@@ -1018,8 +1250,12 @@ matchObj <- function(data.ID, spp.list, data, status = "unmatched",
     set <- "spp.list"
   }   
   
+  attr(data, "format") <- "data:wide"
+  
   m <- list(data.ID = data.ID, spp.list = spp.list, data = data, sub = sub, 
-            set = set, status = status, meta = meta, filename = filename)
+            set = set, meta = meta, filename = filename)
+  attr(m, "type") <- "match.object"
+  attr(m, "status") <- "unmatched"
   return(m)
 }
 
