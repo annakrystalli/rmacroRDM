@@ -47,8 +47,6 @@ setDirectories <- function(script.folder, data.folder, envir = globalenv()) {
   assign("output.folder", paste(data.folder, "outputs/", sep = ""), 
          envir = envir)
 }
-  
-}
 
 #' Setup input.folder
 #'
