@@ -30,13 +30,6 @@ setupFileSystem <- function(script.folder = getwd(), data.folder,
   
   dir.create(paste(script.folder, "process", sep = ""), showWarnings = F)
   
-  assign("script.folder", script.folder, 
-         envir = globalenv())
-  assign("input.folder", paste(data.folder, "inputs/data/", sep = ""), 
-         envir = globalenv())
-  assign("output.folder", paste(data.folder, "outputs/", sep = ""), 
-         envir = globalenv())
-  
   dir.create(paste(output.folder, "data", sep = ""), showWarnings = F)
   dir.create(paste(output.folder, "reports", sep = ""), showWarnings = F)
   dir.create(paste(output.folder, "figures", sep = ""), showWarnings = F)
@@ -44,6 +37,18 @@ setupFileSystem <- function(script.folder = getwd(), data.folder,
   
 }
 
+
+setDirectories <- function(script.folder, data.folder, envir = globalenv()) {
+  
+  assign("script.folder", script.folder, 
+         envir = envir)
+  assign("input.folder", paste(data.folder, "inputs/data/", sep = ""), 
+         envir = envir)
+  assign("output.folder", paste(data.folder, "outputs/", sep = ""), 
+         envir = envir)
+}
+  
+}
 
 #' Setup input.folder
 #'
