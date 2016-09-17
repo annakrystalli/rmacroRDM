@@ -18,7 +18,7 @@ pacman::p_load(pkgs, character.only = T)
 #' to the meta.vars vector supplied.
 #' @export
 #' @examples
-#' setupInputFolder()
+#' setupFileSystem()
 
 setupFileSystem <- function(script.folder = getwd(), data.folder,
                              migrate = F, ...){
@@ -37,8 +37,35 @@ setupFileSystem <- function(script.folder = getwd(), data.folder,
   assign("output.folder", paste(data.folder, "outputs/", sep = ""), 
          envir = globalenv())
   
+  dir.create(paste(output.folder, "data", sep = ""), showWarnings = F)
+  dir.create(paste(output.folder, "reports", sep = ""), showWarnings = F)
+  dir.create(paste(output.folder, "figures", sep = ""), showWarnings = F)
+  
+  
+}
+
+
+#' Setup input.folder
+#'
+#'#' Sets up input.folder with correct folder structure
+#' @param input.folder file path to input data folder.
+#' 
+#' @keywords meta
+#' 
+#' @details Creates required folders in the data input folder for automated retrieval and processing 
+#' of data. "raw" is a folder to stored raw data in. Clean data ready to compile should be stored in
+#' the "csv" folder. Folder "r data" is used for a variety of data generated throughout the matching 
+#' process. The metadata folder should contain a "metadata.csv" with information on all variables in 
+#' the master datasheet. A folder for each observation metadata variable is also generated according
+#' to the meta.vars vector supplied. Requires that meta.vars have been configured. vector containing names of meta.vars. Defaults to c("qc", "observer", "ref", "n", 
+#' "notes")
+
+setupInputFolder <- function(input.folder, migrate = F){
   
   if(!file.exists(input.folder)){stop("invalid input.folder path")}
+  if(!exists("meta.vars")){
+    stop("meta.vars not configured. \n ensure data.base is initialised: see init_db()")
+  }
   
   if(substr(input.folder, nchar(input.folder), nchar(input.folder)) != "/"){
     input.folder <- paste(input.folder, "/", sep = "")
@@ -53,9 +80,9 @@ setupFileSystem <- function(script.folder = getwd(), data.folder,
          FUN = function(x, f){
            if(x == "raw"){f <- c(f, "metadata","taxo")}
            lapply(f, FUN = function(f, x){
-           dir.create(paste(input.folder, x, "/", f, sep =""),
-                      showWarnings = F)}, 
-           x = x)})
+             dir.create(paste(input.folder, x, "/", f, sep =""),
+                        showWarnings = F)}, 
+             x = x)})
   
   # migrate folder function
   migrate_folder <- function(folder, remove.f = F) {
@@ -79,14 +106,7 @@ setupFileSystem <- function(script.folder = getwd(), data.folder,
     f = c("csv", meta.vars)
     lapply(f, migrate_folder, remove.f = F)
   }
-  
-  dir.create(paste(output.folder, "data", sep = ""), showWarnings = F)
-  dir.create(paste(output.folder, "reports", sep = ""), showWarnings = F)
-  dir.create(paste(output.folder, "figures", sep = ""), showWarnings = F)
-  
-  
 }
-
 
 #' Initialise database
 #'
