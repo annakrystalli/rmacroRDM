@@ -34,7 +34,6 @@ setupFileSystem <- function(script.folder = getwd(), data.folder,
   dir.create(paste(output.folder, "reports", sep = ""), showWarnings = F)
   dir.create(paste(output.folder, "figures", sep = ""), showWarnings = F)
   
-  
 }
 
 
@@ -131,11 +130,8 @@ init_db <- function(var.vars = c("var", "value", "data.ID"),
   
   master.vars <- c("species", match.vars, var.vars, meta.vars)
   
-  print(sys.call(which = 0))
-  print(sys.frame(which = 1))
-  
   cat("configuring: ", ls(), sep = "\n")
-  master_config = setNames(lapply(ls(), get, envir = sys.frame(1)), 
+  master_config = setNames(lapply(ls(), get, envir = environment()), 
                            ls()[!ls() %in% "master_config"])
   while("master_config" %in% search()){
     detach(master_config)
@@ -333,7 +329,63 @@ create_vnames <- function(file.names = NULL, data.log = NULL,
     write.csv(vnames, vnames.path, row.names = T, na = "")
 
   }
+ 
+
+#' Load system reference files
+#'
+#' @param view 
+#' @param na.strings 
+#' @param fileEncoding 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+load_sys.ref <- function(view = F, na.strings=c("","NA", " ", "-999"), 
+                         fileEncoding = "") {
+ 
+  print(paste(input.folder, "metadata/","metadata.csv", sep = ""))
+  if(!file.exists(paste(input.folder, "metadata/","metadata.csv", sep = ""))){
+    stop("no metadata.csv in ", paste(input.folder, "metadata/", sep = ""))
+  }
+  metadata <- read.csv(paste(input.folder, "metadata/","metadata.csv", sep = ""), 
+                       stringsAsFactors = F, fileEncoding = fileEncoding, 
+                       na.strings=na.strings, strip.white = T, 
+                       blank.lines.skip = T) 
   
+  if(!file.exists(paste(input.folder, "metadata/","data_log.csv", sep = ""))){
+    stop("no data.log.csv in ", paste(input.folder, "metadata/", sep = ""))
+  }  
+  data.log <- read.csv(paste(input.folder, "metadata/","data_log.csv", sep = ""), 
+                       stringsAsFactors = F, fileEncoding = fileEncoding, 
+                       na.strings=na.strings, strip.white = T, 
+                       blank.lines.skip = T)
+
+  if(!file.exists(paste(input.folder, "metadata/","vnames.csv", sep = ""))){
+    stop("no vnames.csv in ", paste(input.folder, "metadata/", sep = ""))
+  }
+  vnames <- read.csv(paste(input.folder, "metadata/","vnames.csv", sep = ""), 
+                     stringsAsFactors = F, fileEncoding = fileEncoding, 
+                     na.strings=na.strings, strip.white = T, 
+                     blank.lines.skip = T)
+  
+  cat("loading: ", ls(), sep = "\n")
+  print("attaching to env: sys.ref")
+  sys.ref = setNames(lapply(ls(), get, envir = environment()), 
+                           ls()[!ls() %in% "sys.ref"])
+  while("sys.ref" %in% search()){
+    detach(sys.ref)
+  }
+  attach(sys.ref, 3)
+  
+  
+  if(view){
+    View(metadata)
+    View(data.log)
+    View(vnames)
+  }
+  return()
+}
 
 
 #' Check vnames against file.names
@@ -409,27 +461,21 @@ process_csv <- function(file.name, file.name.out = file.name,
   print("===================================================================")
   print(paste("processing", file.name, vname.col))
   
-  data<- read.csv(paste("pre/", fcodes[fcodes == fcode],"/", file.name, sep = ""), 
+  data<- read.csv(paste(input.folder, "pre/", fcodes[fcodes == fcode],"/", file.name, sep = ""), 
                   header = T, strip.white = T, stringsAsFactors = F,
                   na.strings = na.strings, blank.lines.skip = TRUE,
                   fileEncoding = fileEncoding)
   
-  if(exists(var.omit)){
+  if(exists("var.omit")){
   data <- data[,!names(data) %in% var.omit, drop = F]}
-  
-  if(anyDuplicated(data$species) > 0){
-    warning("duplicate species name in",  vname.col, "data")}
-  
-  if(any(is.na(data$species))){
-    data <- data[!is.na(data$species),]
-    warning("NAs detected in species column, data set: ", vname.col,". \n Rows removed")}
   
   if(file.exists(paste(script.folder, "process/", gsub(".csv", "", file.name), 
                        ".R", sep = ""))){
     source(paste(script.folder, "process/", gsub(".csv", "", file.name), 
                  ".R", sep = ""), local = T)
     print(paste("sourced: process/", gsub(".csv", "", file.name), 
-                ".R", sep = ""))}
+                ".R", sep = ""))
+    }
   
   if(file.exists(paste(script.folder, "process/", gsub(".csv", "", file.name), "_",
                        fcode, ".R", sep = ""))){
@@ -461,9 +507,20 @@ process_csv <- function(file.name, file.name.out = file.name,
     print("'genus_species' combined in species column. Genus data removed")
   }
   
+  if(anyDuplicated(data$species) > 0){
+    message("duplicate species name in ",  vname.col)
+  }
+  
+  if(any(is.na(data$species))){
+    data <- data[!is.na(data$species),]
+    warning("NAs detected in species column, data set: ", vname.col,". \n", 
+            sum(is.na(data$species))," rows removed")
+  }
+  
+  
   print(paste("df", c("nrow (species)", "ncol (traits)"),":", dim(data)))
   
-  write.csv(data, paste("post/", fcodes[fcodes == fcode], "/", file.name, sep = ""),
+  write.csv(data, paste(input.folder, "post/", fcodes[fcodes == fcode], "/", file.name, sep = ""),
             row.names = F)
   print("***")
   
@@ -583,11 +640,11 @@ createSpp.list <- function(species, taxo.dat = NULL, taxon.levels = NULL,
     if(!exists("file.names", 1)){
       stop("dcode named file.names vector required in global environment to use spp.list_src for spp.list")}
     
-    if(!file.exists(paste("post/csv/", file.names[gsub("D", "x", spp.list_src)], sep = ""))){
+    if(!file.exists(paste(input.folder, "post/csv/", file.names[gsub("D", "x", spp.list_src)], sep = ""))){
      stop("spp.list_src: ", spp.list_src, " is returning invalid pathway: \n", 
-          paste("post/csv/", file.names[gsub("D", "x", spp.list_src)], sep = ""))}
+          paste(input.folder, "post/csv/", file.names[gsub("D", "x", spp.list_src)], sep = ""))}
     
-    species <- unique(read.csv(paste("post/csv/", file.names[gsub("D", "x", spp.list_src)], sep = ""), 
+    species <- unique(read.csv(paste(input.folder, "post/csv/", file.names[gsub("D", "x", spp.list_src)], sep = ""), 
              header = T)$species)
     cat("species list extracted from dataset: ", spp.list_src, "\n file.name: ",
               file.names[gsub("D", "x", spp.list_src)], sep = "")
