@@ -1323,9 +1323,10 @@ dataMatchPrep <- function(m){
 
 
 # Create match object
-matchObj <- function(data.ID = NULL, spp.list, data = NULL,  
-                     sub, meta, file.name = NULL, unmatched = NULL, fileEncoding = ""){
+matchObj <- function(file.name = NULL, spp.list, sub, data.ID = NULL,  data = NULL,  
+                     meta = NULL,  unmatched = NULL, fileEncoding = ""){
   
+  if(is.null(meta)){meta <- createMeta(meta.vars)}
   if(is.null(file.name)){stop("required argument file.name not supplied")}
   
   if(!file.exists(paste(input.folder, "post/csv/", file.name, sep = ""))){
@@ -1349,7 +1350,7 @@ matchObj <- function(data.ID = NULL, spp.list, data = NULL,
   
   attr(data, "format") <- "data:wide"
   
-  m <- list(data.ID = data.ID, spp.list = spp.list, data = data, sub = sub, 
+  m <- list(data.ID = data.ID, data = data, spp.list = spp.list, sub = sub, 
             set = set, meta = meta, file.name = file.name)
   attr(m, "type") <- "match.object"
   attr(m, "status") <- "unmatched"
