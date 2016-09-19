@@ -936,8 +936,8 @@ compileMeta <- function(m, input.folder = NULL, fileEncoding = "", all.override 
           # if group look up table does not exist, create csv in which individual 
           # data variables can be assigned to meta group names. If data variable 
           # has no metadata, leave as NA in group.
-          meta.grp.df <- data.frame(var = check.vars, grp = "")
-          meta.grp.df$meta.grp.df[meta.grp.df$var %in% names(meta.df)] <- meta.grp.df$var[meta.grp.df$var %in% names(meta.df)]
+          meta.grp.df <- data.frame(var = check.vars, grp = NA)
+          meta.grp.df$grp[meta.grp.df$var %in% names(meta.df)] <- meta.grp.df$var[meta.grp.df$var %in% names(meta.df)]
           write.csv(meta.grp.df, paste(input.folder, "post/", meta.var, "/",
                                        gsub(".csv", "", m$file.name), "_", meta.var, "_group.csv", 
                                        sep = ""),
