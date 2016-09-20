@@ -158,6 +158,9 @@ Functions in the package prepare new datasets to be added to the master. This in
  
 #### see [**vignette**](https://github.com/annakrystalli/rmacroRDM/blob/master/vignette.md) for a demo of current functionality
 
+> ##### **WARNING!! Functionality in the packages has been significantly developed, rendering parts of this vignette deprecated. However much of the background information remains relevant. See [temporary vignette](https://rawgit.com/annakrystalli/rmacroRDM/master/temp_vignette.nb.html) for partial demo of current functionality. Updates to the vignette to follow [\#15](https://github.com/annakrystalli/rmacroRDM/issues/15).**
+
+
 <br>
 
 #### Matching and tracking taxonomy metadata
