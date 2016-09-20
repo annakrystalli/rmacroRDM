@@ -1,0 +1,360 @@
+---
+title: "rmacroRDM_workflow"
+author: 
+date: "last rendered: `r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: paper
+    
+    
+---
+
+***
+<br>
+
+Raw code from this .Rmd available [here](https://raw.githubusercontent.com/annakrystalli/Brain_size_evolution/master/match_workflow.R)
+
+# setup
+
+```{r global-setup, echo = F}
+rm(list=ls())
+options(stringsAsFactors = F)
+```
+
+```{r rmd-setup, echo=FALSE, purl=FALSE}
+require(RCurl)
+require(knitr)
+library(listviewer)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## source rmacroRDM functions
+
+First source the rmacroRDM functions. Currently the best way is to just source from github using `RCulr:getURL()`.
+
+***WARNING: Repo under continuous development***
+
+```{r source-rmacroRDM, message=FALSE, warning=FALSE}
+require(RCurl)
+eval(parse(text = getURL("https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/R/functions.R", ssl.verifypeer = FALSE)))
+eval(parse(text = getURL("https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/R/wideData_function.R", ssl.verifypeer = FALSE)))
+
+```
+
+## setup file.system
+
+Next, to initialise the project we need to supply valid pathways to project folders containing:
+
+- **data\:** folder containg private input and output folders are stored, usually a googledrive folder) and 
+- **code:** folder containing scripts associated with the project. This is usually an RStudio project directory, ideally version controlled on github.
+
+The function sets those directories in the global environment.
+
+```{r set-dirs}
+
+setDirectories(script.folder = "~/Documents/workflows/Brain_size_evolution/", 
+               data.folder = "~/Google Drive/Brain evolution/",
+               envir = globalenv())
+
+```
+
+Once project folders have been set, we set up the *file system* by creating the required folders (if they don't exist already) in the project folders. 
+
+```{r setup-file.system}
+
+setupFileSystem(script.folder = "~/Documents/workflows/Brain_size_evolution/", 
+                data.folder = "~/Google Drive/Brain evolution/")
+```
+
+## initialise database configurations and attach to search pathway
+
+In this step, we initialise the environment with some required parameters to build the database and process files to it. The call below shows the default initialisation settings which you would get if you just called `inti_db()`
+
+```{r master-configuration-default, eval=F, purl=FALSE}
+init_db(var.vars = c("var", "value", "data.ID"),
+                    match.vars = c("synonyms", "data.status"),
+                    meta.vars = c("qc", "observer", "ref", "n", "notes"),
+                    taxo.vars = c("genus", "family", "order"),
+                    spp.list_src = NULL)
+```
+
+I actually want to set **"D0"** as the file from which to extract the spp.list in a bit so I set `spp.list_src = "D0"`.
+
+```{r master-configuration, eval=T}
+init_db(spp.list_src = "D0")
+```
+
+The function appends the given arguments to environment `master_config` at position 2 in the search path (note position of `GlobalEnvironment` = 1). 
+
+Here's a list of the values of the objects we just attached as configurations:
+```{r print-master_config, echo=FALSE, purl=FALSE}
+ms_conf <- setNames(lapply(ls("master_config"), FUN = get, envir = environment()), 
+         ls("master_config"))
+jsonedit(ms_conf)
+```
+
+
+## setup input.folder
+
+Next we setup the folders in `input.folder/pre/` and `post/` according to the configurations set in the previous step.
+
+If the correct setup already exists, no action is taken:
+
+```{r setup-input.folder}
+setupInputFolder(input.folder)
+```
+
+
+```{r print-ia-folder-str, purl=FALSE}
+dirs <- list.dirs(paste(input.folder, "pre/", sep = ""), full.names = T)
+
+print(dirs)
+```
+
+<br>
+
+***
+
+# populate file.system
+
+The functions take advantage of the structure of the file.sytem to automate loading and linking of data and metadata through appropriate naming and location of files within the file.system.
+
+- **`raw/`** organise all raw data
+- **`pre/` save copies of the raw data files in the appropriate data (`cvs`) or `meta.vars` folders.**
+
+***NB*** *`meta.var` data sheets should be named with the same name as the `data` data sheet. Take care during this stage to ensure files are named correctly and stored in the appropriate folders.* 
+
+# load required data
+
+## make fcodes (folder codes) vector
+
+The `fcodes` vector specifies the details of folders in `pre/` and `post/` `input.folder` folders. It also creates appropriate code prefixes for each type of `data` or `meta.var` sheet. Note that **"D"** is reserved for **`data`** files, **"R"** for **`ref`** files and **"N"** for **`n`** files.
+
+```{r ensure-fcodes}
+fcodes <- ensure_fcodes(meta.vars)
+
+```
+
+```{r print-fcodes, purl=FALSE}
+print(fcodes)
+```
+
+
+## set file.names vector
+
+Specify the `file.names` of the files you wish to process. If you want to process all files in the file.system use `file.names = NULL`. 
+
+```{r set-file.names}
+file.names <- create_file.names(file.names = c("brainmain2.csv", 
+                                  "Amniote_Database_Aug_2015.csv", "anagedatasetf.csv"))
+
+
+```
+
+```{r print-file.names, purl=FALSE}
+print(file.names)
+```
+
+
+## load system reference files
+
+Load the system reference (sys.ref) files required for data processing.
+```{r load-sys.ref}
+load_sys.ref(fileEncoding = "mac", view = F)
+```
+*use `view = T` to open a viewer for each of the sys.ref files on load.
+
+### `metadata.csv`
+
+```{r table-metadata, purl=FALSE}
+
+kable(head(metadata, 10))
+```
+
+
+### `data_log.csv`
+
+```{r table-data_log, purl=FALSE}
+
+
+kable(data_log)
+```
+
+### `vnames.csv`
+
+```{r table-vnames, purl=FALSE}
+
+kable(head(vnames, 10))
+```
+
+## load `syn.links.csv`
+
+Used for taxonomic matching (plans to automate this by integrating package `taxize`. supplied syn.links only relates to birds).
+
+```{r load-syn.links}
+syn.links <- read.csv(text=getURL("https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/data/input/taxo/syn.links.csv", 
+                                  ssl.verifypeer = FALSE), header=T)
+```
+
+<br>
+
+***
+
+# process file.system
+
+This step processes the `.csv` copies of the raw data in the `pre/` folder and writes the processed files as `.csv` to the `post/` folder, ready to be matched. The processing conserves the file.names throughout. It is important for this step that the file.system is correctly populated (ie. `meta.var` data sheets should be named with the same name as the `data` data sheet and in the correct folder). 
+
+
+
+<br>
+
+**The function runs a basic processing stage for each file in `file.names`:**
+
+- processing is iterated over:
+    - **all file.names** available in the file.system if `file.system = "fromFS"`,
+    - **files specified in `file.names`** if `file.names` is vector of file names (note that only files available in the file.system are processed).
+- data are loaded, trimmed of whitespace, blank lines and `c("", " ", "NA", "-999")` coded as `NA`s by default.
+- column names is the data are matched to master variable codes through `vnames`
+- if the original dataset contains species details across two columns (ie *species* and *genus*), data in the columns are concatinated in the form `"genus_species"` and merged into a single `species` column. ***ensure column in files containing genus data is matched to code `genus` in `vnames`.*** 
+
+<br>
+
+**custom processing scripts**
+
+you can include extra processing scripts for individual files by adding them into the `{script.folder}process/` folder. To be loaded correctly, **scripts need to be named appropriately:**
+
+- to source across *all files* in file.system matching the `file.name`: name script as `file.name`. eg .`"Amniote_Database_Aug_2015.R"`
+- to source for *files in a specific folder* in file.system matching the `file.name`: name script as `file.name` appended with appropriate `fcode`, eg .`"Amniote_Database_Aug_2015_ref.R"`
+
+
+```{r process-csvs, warning=FALSE}
+
+process_file.system(file.names, fcodes)
+
+```
+
+<br>
+
+***
+
+# Create database
+
+## create spp.list
+
+Use `spp.list_source` to specify dcode of file.name to extract spp.list from. Otherwise, 
+supply vector of species names to `species`.
+
+```{r create-spp.list}
+spp.list <- createSpp.list(species = NULL, 
+                           taxo.dat = NULL, 
+                           spp.list_src = spp.list_src)
+
+```
+
+```{r print-str-spp.list, purl=FALSE}
+str(spp.list, vec.len = 3)
+```
+
+
+## create master shell
+
+```{r create-master}
+master <- create_master(spp.list)
+```
+
+```{r print-str-master, purl=FALSE}
+str(master, max.level = 2, vec.len = 3)
+```
+
+<br>
+
+***
+
+# match new datasets to master
+
+## create match object from file.name. 
+
+The fuction loads the file specified by `filename` in `input.folder/pre/csv/`. The argument `sub` specifies which of the two sets of species to be matched (`spp.list` or `data`) is a subset (ie smaller) than the other. `spp.list` is the spp.list attached to the master.
+```{r create-m}
+
+filename <- file.names[file.names == "Amniote_Database_Aug_2015.csv"]
+
+m <- matchObj(file.name = filename,
+              spp.list = master$spp.list,
+              sub = "spp.list") # use addMeta function to manually add metadata.
+
+```
+
+```{r print-prematch-m, echo=FALSE, purl=FALSE}
+str(m, max.level = 1, vec.len = 3)
+```
+
+## compile metadata and prepare m for matching
+
+```{r process-m}
+m <- m %>% 
+  separateDatMeta() %>% 
+  compileMeta(input.folder = input.folder) %>%
+  checkVarMeta(master$metadata) %>%
+  dataMatchPrep()
+```
+
+
+```{r print-prematch1-m, echo=FALSE, purl=F}
+str(m, max.level = 1, vec.len = 3)
+```
+
+## match m to spp.list
+
+```{r data-spp-match}
+m <- dataSppMatch(m, syn.links = syn.links, addSpp = T)
+```
+
+
+```{r print-postmatch-m, echo=FALSE, purl=F}
+str(m, max.level = 1, vec.len = 3)
+```
+
+### 
+
+```{r output}
+output <- masterDataFormat(m, meta.vars, match.vars, var.vars)
+```
+
+```{r print-output, purl=F}
+str(output, max.level = 1, vec.len = 3)
+```
+
+
+### merge to master
+
+```{r merge-to-master}
+master <- updateMaster(master, output = output)
+```
+
+```{r print-master, purl=F}
+str(master, max.level = 1, vec.len = 3)
+```
+
+
+***
+<br>
+
+# interactive view of framework objects:
+
+## master
+```{r print-ia-master, purl=F}
+jsonedit(master)
+```
+
+<br>
+
+## matched m
+```{r print-ia-m, purl=F}
+jsonedit(m)
+```
+

@@ -5,6 +5,9 @@ date:
 output: md_document
 ---
 
+### WARNING!! Functionality in the packages has been significantly developed, rendering parts of this vignette deprecated. However much of the background information remains relevant. See [temporary vignette](https://rawgit.com/annakrystalli/rmacroRDM/master/temp_vignette.nb.html) for partial demo of current functionality. Updates to the vignette to follow [\#](https://github.com/annakrystalli/rmacroRDM/issues/15)
+
+
 The rmacroRDM package contains functions to help with the compilation of macroecological datasets. It compiles datasets into a **master long database of individual observations**, matched to a specified **master species list**. It also *checks, separates and stores taxonomic and metadata information* on the *observations*, *variables* and *datasets* contained in the data. It therefore aims to ensure full traceability of datapoints and as robust quality control, all the way through to the extracted analytical datasets. 
 
 The idea is to enforce a basic level of data management and quality control and bundling it with important metadata for both each stage in data processing and compilation and **`[[master]]` outputs**. Managing data in such a way makes validating, understanding, analysing, visualising and communicating much easier. 
@@ -17,7 +20,7 @@ Standardisation allows data to be shared and build upon more easily and with hig
 
 The overall purpose of the functions in the package are to compile macroecological trait datasets into **a master database of observations (T1)**. This allows information to be stored with individual datapoints, allowing for better quality control and traceability. 
 
-Metadata information on individual data points stored in the **long `master` dataset** is defined by assigning ***observation metavariables `{meta.vars}`***. Information on the taxonomic matching of datapoints through synonyms is also stored and is defined through **match variables `{match.vars}`**. In the example below, "*species*", *var*", "*value*" identify each oservation, "*data.status*" "*qc*","*observer*", "*ref*" and "*n*" are the default **`meta.vars`** and "*synonyms*" and "*data.status*"  are the default **`match.var`**.
+Metadata information on individual data points stored in the **long `master` dataset** is defined by assigning ***observation meta-variables `{meta.vars}`***. Information on the taxonomic matching of datapoints through synonyms is also stored and is defined through **match variables `{match.vars}`**. In the example below, "*species*", *var*", "*value*" identify and contain each oservation, "*data.status*" "*qc*","*observer*", "*ref*" and "*n*" are the default **`meta.vars`** and "*synonyms*" and "*data.status*"  are the default **`match.var`**.
 
 
 
@@ -229,8 +232,7 @@ Once initial settings have been made, you will need to setup the input folder. T
 
 ```{r, warning=F, message=FALSE, eval=FALSE}
 
-# custom meta.variables can be assigned by supplying a vector of character strings to the metadata
-# argument in function setupInputFolder()
+# custom meta.variables can be assigned by supplying a vector of character strings to the meta.vars argument in function `setupInputFolder()`
 
 meta.vars = c("qc", "observer", "ref", "n", "notes")
 
@@ -484,6 +486,8 @@ master <- list(data = newMasterData(master.vars), spp.list = spp.list, metadata 
 
 D0 <- D0[,!names(D0) %in% taxo.vars]
 
+longto
+
 master <- updateMaster(master, data = D0, spp.list = NULL)
 
 str(master)
@@ -675,7 +679,7 @@ kable(head(output$data))
  
 ```{r, warning=F, message=FALSE} 
  
-master <- updateMaster(master, data = output$data, spp.list = output$spp.list)
+master <- updateMaster(master, output)
  
 str(master)
 
