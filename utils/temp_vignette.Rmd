@@ -12,11 +12,26 @@ output:
     
 ---
 
+
 ***
 
-R code for this workflow available [here](https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/utils/temp_vignette.R)
+<br>
 
-**rmacroRDM [repo](https://github.com/annakrystalli/rmacroRDM)**
+<font size="4.5"><b>Tools to handle trait macroecological datasets in R</b></font>
+
+
+The rmacroRDM package contains functions to help with the compilation of
+macroecological datasets. It compiles datasets into a **master long
+database of individual observations**, matched to a specified **master
+species list**. It also *checks, separates and stores taxonomic and
+metadata information* on the *observations*, *variables* and *datasets*
+contained in the data. It therefore aims to ensure full traceability of
+datapoints and as robust quality control, all the way through to the
+extracted analytical datasets.
+
+**For more details and context, see the rmacroRDM github [repo](https://github.com/annakrystalli/rmacroRDM)**
+
+R code for this workflow available [here](https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/utils/temp_vignette.R)
 
 ***
 <br>
