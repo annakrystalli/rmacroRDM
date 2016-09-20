@@ -13,9 +13,13 @@ output:
 ---
 
 ***
-<br>
 
-Raw code from this .Rmd available [here](https://raw.githubusercontent.com/annakrystalli/Brain_size_evolution/master/match_workflow.R)
+R code for this workflow available [here](https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/utils/temp_vignette.R)
+
+**rmacroRDM [repo](https://github.com/annakrystalli/rmacroRDM)**
+
+***
+<br>
 
 # setup
 
@@ -24,7 +28,7 @@ rm(list=ls())
 options(stringsAsFactors = F)
 ```
 
-```{r rmd-setup, echo=FALSE, purl=FALSE}
+```{r rmd-setup, echo=FALSE, purl=FALSE, warning=FALSE, message=FALSE}
 require(RCurl)
 require(knitr)
 library(listviewer)
