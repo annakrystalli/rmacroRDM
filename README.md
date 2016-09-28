@@ -165,7 +165,7 @@ Functions in the package prepare new datasets to be added to the master. This in
 
 #### Matching and tracking taxonomy metadata
 
-- integrate [**`taxize`**](https://cran.r-project.org/web/packages/taxize/vignettes/taxize_vignette.html) [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/4)
+- integrate [**`taxize`**](https://cran.r-project.org/web/packages/taxize/vignettes/taxize_vignette.html) [\#4](https://github.com/annakrystalli/rmacroRDM/issues/4)
   - auto-correct species names input errors with fuzzy matching
   - search for synonyms
 - build project specific database of synonym links
@@ -176,7 +176,7 @@ Functions in the package prepare new datasets to be added to the master. This in
 
 - QC
 - observer details
-- **ref**: **[[ISSUE](https://github.com/annakrystalli/rmacroRDM/issues/5)]** as with tracking taxonomic metadata, reference data sourcing and handling could also be more formalised and integrated. Link to reference databases.
+- **ref**: **[\#5](https://github.com/annakrystalli/rmacroRDM/issues/5)** as with tracking taxonomic metadata, reference data sourcing and handling could also be more formalised and integrated. Link to reference databases.
 
 #### Matching and tracking variable metadata
 
@@ -184,7 +184,7 @@ Functions in the package prepare new datasets to be added to the master. This in
 - metadata readily available for plotting and extraction for publication.
 
 
-#### Basic Quality control functionality #10 
+#### Basic Quality control functionality [\#10](https://github.com/annakrystalli/rmacroRDM/issues/10) 
 - some simple tools to help identify errors, outliers etc
 
 #### Produce analytical datasets
@@ -197,7 +197,7 @@ Package to include functions that allow users to:
     - output to include variable subset metadata
     - a list of all references used to create analytical dataset.
 
-#### Explore data through apps
+#### Explore data through apps [\#19](https://github.com/annakrystalli/rmacroRDM/issues/19)
 Standardisation of data products allows exploratory apps to be built around them, eg: 
 
 - [**sex roles in birds exploratory app**](https://annakrystalli.shinyapps.io/bird_app/): app is built around outputs of the **`rmacroRDM`** workflow. I'm hoping to adapt it so that rmacroRDM data products containing all data required to power the app can be uploaded.
@@ -208,7 +208,7 @@ Standardisation of data products allows exploratory apps to be built around them
 
 ### **Future development**
 
-A interesting added feature could be functionality for exploring potential data biases of analytical datasets. [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/9)
+A interesting added feature could be functionality for exploring potential data biases of analytical datasets. [\#9](https://github.com/annakrystalli/rmacroRDM/issues/9)
 
 - taxonomic biases (ie calculate taxonomic distinctness of subsets of complete case species for different variable combinations)
 - data gap biases  
