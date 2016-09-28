@@ -184,7 +184,7 @@ Functions in the package prepare new datasets to be added to the master. This in
 - metadata readily available for plotting and extraction for publication.
 
 
-#### Basic Quality control functionality [**ISSUE**](https://github.com/annakrystalli/rmacroRDM/issues/10)
+#### Basic Quality control functionality #10 
 - some simple tools to help identify errors, outliers etc
 
 #### Produce analytical datasets
