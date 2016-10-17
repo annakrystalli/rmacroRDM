@@ -478,7 +478,7 @@ process_csv <- function(file.name, file.name.out = file.name,
   data<- read.csv(paste(input.folder, "pre/", fcodes[fcodes == fcode],"/", file.name, sep = ""), 
                   header = T, strip.white = T, stringsAsFactors = F,
                   na.strings = na.strings, blank.lines.skip = TRUE,
-                  fileEncoding = fileEncoding)
+                  fileEncoding = fileEncoding, check.names = F)
   
   if(exists("var.omit")){
   data <- data[,!names(data) %in% var.omit, drop = F]}
@@ -499,9 +499,9 @@ process_csv <- function(file.name, file.name.out = file.name,
                 fcode,".R", "\n", sep = ""))}
   
   #This is for the brain size database that has problems with variable names
-  vnames[, vname.col] <- gsub(" ", ".", vnames[, vname.col])
-  vnames[, vname.col] <- gsub("\\(", ".", vnames[, vname.col])
-  vnames[, vname.col] <- gsub("\\)", ".", vnames[, vname.col])
+  #vnames[, vname.col] <- gsub(" ", ".", vnames[, vname.col])
+  #vnames[, vname.col] <- gsub("\\(", ".", vnames[, vname.col])
+  #vnames[, vname.col] <- gsub("\\)", ".", vnames[, vname.col])
   
   
   #For brain size
