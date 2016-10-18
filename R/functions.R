@@ -483,6 +483,10 @@ process_csv <- function(file.name, file.name.out = file.name,
   if(exists("var.omit")){
   data <- data[,!names(data) %in% var.omit, drop = F]}
   
+  if(any(duplicated(names(data)))){
+    stop("duplicate variable names in ", vname.col, ": ", file.name)
+  }
+  
   if(file.exists(paste(script.folder, "process/", gsub(".csv", "", file.name), 
                        ".R", sep = ""))){
     source(paste(script.folder, "process/", gsub(".csv", "", file.name), 
