@@ -1950,3 +1950,7 @@ widenMaster <- function(master, vars = unique(master$data$var),
   
 }
 
+launch_sr_configurator <- function(sr_configurator, file_setup_path) {
+  eval(sr_configurator)
+  
+}
