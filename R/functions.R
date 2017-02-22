@@ -1,6 +1,5 @@
-pkgs <- c("dplyr", "plyr", "readr", "listenv")
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(pkgs, character.only = T)
+pacman::p_load(c("dplyr", "plyr", "readr", "listenv"), character.only = T)
 
 
 #' Setup file.system.
