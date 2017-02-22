@@ -9,20 +9,12 @@ report.folder <- "~/Google Drive/Brain evolution/outputs/reports/"
 
 
 # ---- extract-scripts-from-Rmd ----
-purl(input = paste(script.folder, "match_workflow.Rmd", sep = ""),
-     output = paste(script.folder, "match_workflow.R", sep = ""))
-
-# ---- render-Rmd ----
-rmarkdown::render(paste(script.folder, "match_workflow.Rmd", sep = ""), 
-                  output_format = "html_notebook", 
-                  output_options = list(toc =  T,
-                                        toc_float = T,
-                                        number_sections =  T,
-                                        theme = "paper"))
+purl(input = "utils/temp_vignette.Rmd",
+     output = "utils/temp_vignette.R")
 
 
 # render to rmacroRDM 
-rmarkdown::render(paste(script.folder, "match_workflow.Rmd", sep = ""), 
+rmarkdown::render("utils/temp_vignette.Rmd", 
                   output_format = "html_notebook", 
                   output_options = list(toc =  T,
                                         toc_float = T,
