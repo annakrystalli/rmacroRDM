@@ -1,8 +1,8 @@
 # ---- dependencies ----
-pkgs <- c("dplyr", "shiny", "shinyBS", "pander", "tibble", "shinythemes", "devtools", "DT")
+pkgs <- c("dplyr", "shiny", "shinyBS", "pander", "tibble", "shinythemes", "devtools", "DT", "RCurl")
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(pkgs, character.only = T)
-require(RCurl)
+
 eval(parse(
   text = getURL(
     "https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/R/functions.R", 
@@ -287,7 +287,7 @@ server = function(input, output, session) {
   
   # ---- vnames ----
   observeEvent(input$BUTupdateV, {
-    source("/Users/Anna/Documents/workflows/rmacroRDM/R/functions.R", local = T)
+    #source("/Users/Anna/Documents/workflows/rmacroRDM/R/functions.R", local = T)
     print(identical(v$vnames, update_vnames()))
     if(!identical(v$vnames, update_vnames())){
       v$vnames == update_vnames()
