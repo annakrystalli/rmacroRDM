@@ -1,7 +1,8 @@
 # ---- dependencies ----
-pkgs <- c("dplyr", "shiny", "shinyBS", "pander", "tibble", "shinythemes", "devtools", "DT", "RCurl")
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(pkgs, character.only = T)
+pacman::p_load(c("dplyr", "shiny", "shinyBS", "pander", "tibble", "shinythemes", 
+                 "devtools", "DT", "RCurl"), 
+               character.only = T)
 
 eval(parse(
   text = getURL(
@@ -12,7 +13,7 @@ eval(parse(
 
 # ---- setup ----
 if(exists("file_setup_path")){}else{
-  file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+  file_setup_path <- "file_setup.R"
   source(file_setup_path)}
 tab_cex <- "font-size:80%; word-wrap: break-word; height:40px"
 
