@@ -200,7 +200,7 @@ server = function(input, output, session) {
   
   observeEvent(input$BUTreset,{
     v$data_log <- read.csv(file = paste(input.folder, "metadata/data_log.csv", sep = ""),
-                           stringsAsFactors = F, fileEncoding = fileEncoding, 
+                           stringsAsFactors = F, fileEncoding = v$fileEncodings["data_log", "encoding"], 
                            na.strings = ds$na.strings, strip.white = T, 
                            blank.lines.skip = T)
     v$msg <- "browser data_log reset to file"
@@ -209,7 +209,7 @@ server = function(input, output, session) {
   observeEvent(input$BUTsaveD,{
     v$msg <- "file data_log synced to browser"
     write.csv(v$data_log, file = paste(input.folder, "metadata/data_log.csv", sep = ""),
-              row.names = F)
+              row.names = F, fileEncoding = v$fileEncodings["data_log", "encoding"])
   })
   
   output$text <- renderText({ 
@@ -493,8 +493,8 @@ server = function(input, output, session) {
     load(ds$fileEncodings.path)
     selected <- fileEncodings[names(enc_files) == input$csv.file2, "encoding"]
     v$vnames <- read.csv(file = ds$vnames.path,
-                         stringsAsFactors = F, fileEncoding =selected, 
-                         na.strings=selected, strip.white = T, 
+                         stringsAsFactors = F, fileEncoding = selected, 
+                         na.strings=ds$na.strings, strip.white = T, 
                          blank.lines.skip = T)
     v$msg2 <- "browser vnames reset to file"
   })
@@ -502,7 +502,7 @@ server = function(input, output, session) {
   observeEvent(input$BUTsaveD2,{
     v$msg2 <- "file vnames synced to browser"
     write.csv(v$vnames, file = ds$vnames.path,
-              row.names = F)
+              row.names = F, fileEncoding = v$fileEncodings["vnames", "encoding"])
   })
   
   
