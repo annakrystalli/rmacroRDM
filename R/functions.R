@@ -901,7 +901,7 @@ createSpp.list <- function(species = NULL, taxo.dat = NULL, spp.list_src = ds$sp
            paste0(ds$input.folder, "post/", spp.list_src.path))}
     
     species <- unique(read.csv(paste0(ds$input.folder, "post/", spp.list_src.path), 
-                               header = T, stringsAsFactors = F, fileEncoding = [ds$spp.list_src, "encoding"], 
+                               header = T, stringsAsFactors = F, fileEncoding = sr$fileEncodings[ds$spp.list_src, "encoding"], 
                                na.strings = ds$na.strings, strip.white = T, 
                                blank.lines.skip = T)$species)
     cat("species list extracted from dataset: ", spp.list_src, "\n file.name: ",
