@@ -125,8 +125,7 @@ init_db <- function(script.folder = getwd(),
                     data_log.vars =  c("dcode", "format","descr", "source", "source.contact", 
                                        "contact.details", "method", "notes"),
                     spp.list_src = NULL,
-                    na.strings=c("","NA", " ", "-999"), 
-                    fileEncoding = "UTF-8",
+                    na.strings=c("","NA", " ", "-999"),
                     envir = .GlobalEnv,
                     return.list = F) {
   
@@ -197,7 +196,7 @@ path_to_dcode <- function(path) {
   s.path <- unlist(strsplit(path, "/"))
   fcode <- ds$fcodes[s.path[1] == ds$fcodes]
   data_log <- read.csv(ds$data_log.path, 
-                       stringsAsFactors = F, fileEncoding = "",
+                       stringsAsFactors = F, 
                        na.strings = ds$na.strings, strip.white = T, 
                        blank.lines.skip = T, header = T)
   
@@ -1577,7 +1576,7 @@ update_fileEncodings <- function(file.paths = NULL, file.dcodes = NULL,
 
 # Create match object
 matchObj <- function(file.name = NULL, spp.list, sub, dcode = NULL,  data = NULL,  
-                     meta = createMeta(),  fileEncoding = "", format = "wide"){
+                     meta = createMeta(), format = "wide"){
   
   if(is.null(data)) {
     if(is.null(file.name)){stop("required argument file.name not supplied")}
