@@ -276,8 +276,7 @@ create_metadata <- function(save = F){
                        ds$metadata.vars)
   if(save){
     print(paste("writing metadata.cvs to path:",  "'", ds$metadata.path,"'", sep = ""))
-    write.csv(metadata, file = ds$metadata.path, row.names = F, 
-              fileEncoding = ds$fileEncoding)
+    write.csv(metadata, file = ds$metadata.path, row.names = F)
   }  
 }
 
@@ -315,7 +314,7 @@ create_data_log <- function(file.order, save = T){
     data_log <- setNames(data.frame(matrix(nrow = 0, ncol = length(dl.names))), dl.names)
     if(save){
       write.csv(data_log, file = ds$data_log.path,
-                row.names = F, fileEncoding = ds$fileEncoding)
+                row.names = F)
       cat(paste("blank data_log written to: \n'", ds$data_log.path, "'\n", "Complete to continue",
                 sep = ""))
     }
@@ -334,7 +333,7 @@ create_data_log <- function(file.order, save = T){
   data_log[,"csv_file.name"] <- file.order.fs
   if(save){
     write.csv(data_log, file = ds$data_log.path,
-              row.names = F, fileEncoding = ds$fileEncoding)
+              row.names = F)
   }
   return()
   
@@ -360,7 +359,7 @@ create_vnames <- function(save = F) {
   if(save){
     print(paste("writing vnames.cvs to path:",  "'",ds$vnames.path,"'", sep = ""))
     write.csv(vnames, ds$vnames.path, row.names = T, na = "", 
-              fileEncoding = ds$fileEncoding)
+              fileEncoding = sr$fileEncodings["vnames", "encoding"])
   }
 }
 
@@ -370,7 +369,7 @@ update_data_log <- function(save = F, trim2fs = FALSE, envir = .GlobalEnv) {
   if(!file.exists(ds$data_log.path)){stop("no valid data_log found or specified")}
   
   data_log <- read.csv(file = ds$data_log.path,
-                       stringsAsFactors = F, fileEncoding = ds$fileEncoding, 
+                       stringsAsFactors = F, fileEncoding = sr$fileEncodings["data_log", "encoding"], 
                        na.strings = ds$na.strings, strip.white = T, 
                        blank.lines.skip = T)
   
@@ -416,7 +415,7 @@ update_data_log <- function(save = F, trim2fs = FALSE, envir = .GlobalEnv) {
     print(paste("writing updated data_log to: ", 
                 ds$data_log.path, sep = ""))
     write.csv(data_log, file = ds$data_log.path,
-              row.names = F, fileEncoding = ds$fileEncodings["data_log",
+              row.names = F, fileEncoding = sr$fileEncodings["data_log",
                                                              "encoding"])
     if(exists("sr", envir = envir)){
       if(exists("data_log", envir = sr)){
@@ -755,7 +754,7 @@ process_csv <- function(file.path, save.taxo = F) {
   if(save.taxo & (dcode %in% names(get_file.names()))){
     taxo <- data[, names(data) %in% c("species", ds$taxo.vars)]
     write.csv(taxo, file = paste0(ds$input.folder, "taxo/", dcode,"_taxo.csv", sep = ""), 
-              row.names = F, fileEncoding = ds$fileEncoding)
+              row.names = F, fileEncoding = sr$fileEncodings[dcode, "encoding"])
     cat("taxonomic vars: [", names(data)[names(data) %in% c("species", ds$taxo.vars)],  
         "] saved as \n'" ,paste0(ds$input.folder, "taxo/", dcode,"_taxo.csv", sep = ""),  "'\n")
   }
@@ -790,7 +789,7 @@ process_csv <- function(file.path, save.taxo = F) {
   cat(paste(c("species", "traits"),":", dims), "\n")
   
   write.csv(data, paste(ds$input.folder, "post/", file.path, sep = ""),
-            row.names = F, fileEncoding = ds$fileEncoding)
+            row.names = F, fileEncoding = sr$fileEncodings[dcode, "encoding"])
   cat("***", "\n")
   
 }
@@ -834,7 +833,7 @@ longtoMasterFormat <- function(file.name = get_file.names()[ds$spp.list_src],
       dcode <- names(file.name)
     }
   data <- read.csv(paste0(ds$input.folder, "post/csv/", file.name),
-                   stringsAsFactors = F, fileEncoding = ds$fileEncoding,
+                   stringsAsFactors = F, fileEncoding = sr$fileEncodings[dcode, "encoding"],
                    na.strings = ds$na.strings, strip.white = T, 
                    blank.lines.skip = T, header = T)
   
@@ -902,7 +901,7 @@ createSpp.list <- function(species = NULL, taxo.dat = NULL, spp.list_src = ds$sp
            paste0(ds$input.folder, "post/", spp.list_src.path))}
     
     species <- unique(read.csv(paste0(ds$input.folder, "post/", spp.list_src.path), 
-                               header = T, stringsAsFactors = F, fileEncoding = ds$fileEncoding, 
+                               header = T, stringsAsFactors = F, fileEncoding = [ds$spp.list_src, "encoding"], 
                                na.strings = ds$na.strings, strip.white = T, 
                                blank.lines.skip = T)$species)
     cat("species list extracted from dataset: ", spp.list_src, "\n file.name: ",
@@ -1147,7 +1146,7 @@ compileMeta <- function(m, all.override = F){
       print(paste("loading ", "'", m.path, "'", sep = ""))
       
       load.df <- read.csv(paste(ds$input.folder, "post/", m.path,sep = ""), 
-                          stringsAsFactors = F, fileEncoding = ds$fileEncoding,
+                          stringsAsFactors = F, fileEncoding = sr$fileEncodings[m$dcode, "encoding"],
                           na.strings = ds$na.strings, strip.white = T, 
                           blank.lines.skip = T, header = T) %>%
         checkMetaSpecies(data, meta.var)
@@ -1180,7 +1179,7 @@ compileMeta <- function(m, all.override = F){
             meta.grp.df  <- read.csv(paste(ds$input.folder, "post/", meta.var, "/", 
                                            gsub(".csv", "",m$file.name), "_", 
                                            meta.var, "_group.csv", sep = ""), 
-                                     stringsAsFactors = F, fileEncoding = ds$fileEncoding,
+                                     stringsAsFactors = F, fileEncoding = sr$fileEncodings[m$dcode, "encoding"],
                                      na.strings = ds$na.strings, strip.white = T, 
                                      blank.lines.skip = T, header = T)
           }else{
@@ -1192,7 +1191,7 @@ compileMeta <- function(m, all.override = F){
             write.csv(meta.grp.df, paste(ds$input.folder, "post/", meta.var, "/",
                                          gsub(".csv", "", m$file.name), "_", meta.var, "_group.csv", 
                                          sep = ""),
-                      row.names = F, fileEncoding = ds$fileEncoding)
+                      row.names = F, fileEncoding = sr$fileEncodings[m$dcode, "encoding"])
             stop(paste(meta.var,".group.csv created, in post/",
                        meta.var," folder. Update file to proceed", 
                        sep = ""))}
@@ -1587,7 +1586,7 @@ matchObj <- function(file.name = NULL, spp.list, sub, dcode = NULL,  data = NULL
            paste(ds$input.folder, "post/csv/", file.name, sep = ""),
            "\"")}
     data <-  read.csv(paste(ds$input.folder, "post/csv/", file.name, sep = ""),
-                      stringsAsFactors = F, fileEncoding = ds$fileEncoding,
+                      stringsAsFactors = F, fileEncoding = sr$fileEncodings[dcode, "encoding"],
                       na.strings = ds$na.strings, strip.white = T, 
                       blank.lines.skip = T, header = T)
     format <- sr$data_log[sr$data_log$dcode == dcode, "format"]
