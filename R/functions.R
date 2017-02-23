@@ -1930,25 +1930,49 @@ widenMaster <- function(master, vars = unique(master$data$var),
   }else{
     df.w <- df[, names(df) %in% c("species", "var", "value")]
     }
-  
-  
-  
   wdf <- spread(df.w, key = var, value, convert = F)
-  
   if(add.taxo){
     wdf <- data.frame(species = wdf[,"species"], 
                       master$spp.list[match(wdf$species, master$spp.list$species), 
                                       names(master$spp.list)[names(master$spp.list) %in% ds$taxo.vars]],
                       wdf[, names(wdf) != "species"])
   }
-  
-  
-  
   return(wdf)
-  
 }
 
 launch_sr_configurator <- function(sr_configurator, file_setup_path) {
   eval(sr_configurator)
+}
+
+
+
+
+check_meta_factors <- function(metadata = sr$metadata) {
   
+  if(length(setdiff(metadata$code[!is.na(metadata$scores)], metadata$code[metadata$type %in% c("factor", "Cat", "Bin", "Nom")])) > 0){
+    warning("scores entries for traits indicated as non-categorical: /n")
+    metadata[metadata$code %in% setdiff(metadata$code[!is.na(metadata$scores)], 
+                                        metadata$code[metadata$type %in% c("factor", "Cat", "Bin", "Nom")]),
+             c("code", "type", "scores", "levels")]
+  }
+  
+  fact <- metadata[metadata$type %in% c("factor", "Cat", "Bin"),]
+  scores <- setNames(strsplit(fact$scores, ";"), fact$code)
+  if(any(is.na(scores))){
+    stop("scores missing for categorical traits: \n", paste(names(scores[is.na(scores)]), collapse = "\n"))
+  }
+  levels <- setNames(strsplit(fact$levels, ";"), fact$code)
+  if(any(is.na(levels))){
+    stop("scores missing for categorical traits: \n", paste(names(levels[is.na(levels)]), collapse = "\n"))
+  }
+  scores.n <- sapply(scores, FUN = function(x){length(x)})
+  levels.n <- sapply(levels, FUN = function(x){length(x)})
+  ok <- scores.n == levels.n
+  if(any(!ok)){
+    print(data.frame( 
+      scores.n = scores.n[!ok],
+      levels.n = levels.n[!ok]))
+    stop("scores.n does not match levels.n for indicated categorical traits")
+  }
+  print(TRUE)
 }
