@@ -1576,13 +1576,22 @@ update_fileEncodings <- function(file.paths = NULL, file.dcodes = NULL,
 
 # Create match object
 matchObj <- function(file.name = NULL, spp.list, sub,  data = NULL,  
-                     meta = createMeta(), format = "wide"){
-  if(is.null(names(file.name))){
-    dcode <- names(get_file.names()[get_file.names() == file.name])
-  }else{
-    dcode <- names(file.name)
+                     meta = createMeta(), format = "wide", dcode = NULL){
+  if(!is.null(file.name)){
+    if(!file.exists(paste(ds$input.folder, "post/csv/", file.name, sep = ""))){
+      stop("file.name specifying invalid path: \n \"", 
+           paste(ds$input.folder, "post/csv/", file.name, sep = ""),
+           "\"")}
+    if(is.null(names(file.name))){
+      dcode <- names(get_file.names()[get_file.names() == file.name])
+    }else{
+      dcode <- names(file.name)
+    }
   }
   
+  if(is.null(dcode)){
+    stop("no dcode supplied")
+  }
   if(is.null(data)) {
     if(is.null(file.name)){stop("required argument file.name not supplied")}
     if(!file.exists(paste(ds$input.folder, "post/csv/", file.name, sep = ""))){
